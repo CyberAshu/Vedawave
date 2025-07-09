@@ -1,0 +1,77 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Chat image display styles */
+.image-attachment {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-attachment img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 300px;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.image-attachment img:hover {
+  transform: scale(1.02);
+}
+
+.file-attachment {
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+/* Message bubble adjustments for attachments */
+.message-content {
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.attachment {
+  margin-top: 4px;
+}
+
+.attachment:first-child {
+  margin-top: 0;
+}
