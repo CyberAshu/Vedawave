@@ -169,10 +169,6 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [commonEmojis] = useState(['👍', '❤️', '😂', '😢', '😮', '😡', '👎', '🎉']);
 
-  const handleReactToMessage = (messageId) => {
-    setShowEmojiPicker(showEmojiPicker === messageId ? null : messageId);
-    setOpenMenuId(null);
-  };
 
   const handleEmojiReaction = async (messageId, emoji) => {
     try {
@@ -369,7 +365,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                         window.open(`${FILE_BASE_URL}${attachment.file_url}`, '_blank');
                                       }}
                                     />
-                                    <div className="text-xs text-gray-500 mt-1">
+                                    <div className={`text-xs mt-1 px-2 py-1 rounded ${
+                                      message.sender_id === actualCurrentUser.id
+                                        ? 'bg-blue-600 text-blue-100'
+                                        : 'bg-gray-100 text-gray-700'
+                                    }`}>
                                       {attachment.filename}
                                     </div>
                                   </div>

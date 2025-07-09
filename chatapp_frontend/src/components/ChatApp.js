@@ -40,6 +40,7 @@ const ChatApp = () => {
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
+    setShowSettings(false); // Reset settings view when chat is selected
     // Close sidebar on mobile when chat is selected
     if (window.innerWidth < 768) {
       setShowSidebar(false);

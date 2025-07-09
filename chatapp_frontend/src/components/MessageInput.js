@@ -120,13 +120,17 @@ const MessageInput = ({ onSendMessage, chatId }) => {
       )}
       
       {/* Message Input */}
-      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+      <form onSubmit={handleSubmit} className="flex items-stretch space-x-2">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+          className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 hover:border-blue-300"
+          title="Attach file"
+          style={{ height: '46px', width: '46px', alignSelf: 'flex-end' }}
         >
-          📎
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+          </svg>
         </button>
         
         <input
@@ -139,7 +143,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
         />
         
         <div className="flex-1 min-w-0">
-<textarea
+          <textarea
             value={message}
             onChange={handleInputChange}
             onKeyPress={(e) => {
@@ -148,48 +152,55 @@ const MessageInput = ({ onSendMessage, chatId }) => {
                 handleSubmit(e);
               }
             }}
-            placeholder="Type your message.."
-            className="w-full px-4 py-2 bg-gray-100 border-none rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            placeholder="Type your message here..."
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 block"
             rows={1}
+            style={{ minHeight: '46px', height: '46px', lineHeight: '1.5' }}
             onInput={(e) => {
+              // Reset height to auto to get accurate scrollHeight
               e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              // Set height based on content, with min and max constraints
+              const newHeight = Math.max(46, Math.min(e.target.scrollHeight, 120));
+              e.target.style.height = newHeight + 'px';
             }}
           />
         </div>
         
-        <div className="flex items-center space-x-1">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="hidden sm:block p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              😊
-            </button>
-            
-            {showEmojiPicker && (
-              <div className="absolute bottom-12 right-0 z-50">
-                <EmojiPicker onEmojiClick={onEmojiClick} />
-              </div>
-            )}
-          </div>
-          
+        <div className="relative" style={{ alignSelf: 'flex-end' }}>
           <button
             type="button"
-            className="hidden sm:block p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 hover:border-blue-300"
+            title="Add emoji"
+            style={{ height: '46px', width: '46px' }}
           >
-            🎤
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </button>
           
-          <button
-            type="submit"
-            disabled={!message.trim() && attachments.length === 0}
-            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          >
-            ➤
-          </button>
+          {showEmojiPicker && (
+            <div className="absolute bottom-12 right-0 z-50">
+              <EmojiPicker onEmojiClick={onEmojiClick} />
+            </div>
+          )}
         </div>
+        
+        <button
+          type="submit"
+          disabled={!message.trim() && attachments.length === 0}
+          className={`rounded-lg transition-all duration-200 flex-shrink-0 flex items-center justify-center ${
+            message.trim() || attachments.length > 0
+              ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          }`}
+          title="Send message"
+          style={{ height: '46px', width: '46px', alignSelf: 'flex-end' }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
       </form>
     </div>
   );

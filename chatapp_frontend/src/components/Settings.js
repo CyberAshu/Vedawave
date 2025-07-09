@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { User, Edit3, LogOut, Camera, Save, X } from 'lucide-react';
+import { Edit3, Save, X, Camera, LogOut, User } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
 import authService from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
 const Settings = ({ currentUser, onLogout, onBackClick }) => {
   const { token } = useAuth();
+  const { connected } = useSocket();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
@@ -146,9 +148,12 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
             <div className="space-y-2">
               <h4 className="text-xl font-semibold text-gray-800">{currentUser.name}</h4>
               <p className="text-gray-600">{currentUser.email}</p>
-              <p className="text-sm text-gray-500">
-                Status: {currentUser.is_active ? 'Online' : 'Offline'}
-              </p>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <p className="text-sm text-gray-500">
+                  Status: {connected ? 'Online' : 'Offline'}
+                </p>
+              </div>
             </div>
           )}
         </div>

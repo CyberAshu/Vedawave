@@ -22,7 +22,12 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
 
   const handleStartChat = async (friendId) => {
     try {
-      await onNewChat(friendId);
+      const existingChat = chats.find(chat => chat.other_user.id === friendId);
+      if (existingChat) {
+        onChatSelect(existingChat);
+      } else {
+        await onNewChat(friendId);
+      }
       setActiveTab('chats'); // Switch to chats tab after starting a chat
     } catch (error) {
       console.error('Error starting chat:', error);
@@ -132,7 +137,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           onClick={() => setActiveTab('chats')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'chats'
-              ? 'border-blue-500 text-blue-600 bg-blue-50'
+              ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -143,7 +148,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           onClick={() => setActiveTab('friends')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'friends'
-              ? 'border-blue-500 text-blue-600 bg-blue-50'
+              ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
