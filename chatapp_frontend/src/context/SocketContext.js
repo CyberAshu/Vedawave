@@ -54,11 +54,16 @@ export const SocketProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('newMessage', { detail: { chatId: data.message.chat_id } }));
           } else if (data.type === 'message_status') {
             // Handle message status updates (delivered, seen)
-            setMessages(prev => prev.map(msg => 
-              msg.id === data.message_id 
-                ? { ...msg, status: data.status }
-                : msg
-            ));
+            console.log('Received message status update:', data);
+            setMessages(prev => {
+              const updated = prev.map(msg => 
+                msg.id === data.message_id 
+                  ? { ...msg, status: data.status }
+                  : msg
+              );
+              console.log('Updated messages in context:', updated.find(m => m.id === data.message_id));
+              return updated;
+            });
             // Trigger event for ChatWindow to update the message status in real-time
             window.dispatchEvent(new CustomEvent('messageStatusUpdate', { 
               detail: { 

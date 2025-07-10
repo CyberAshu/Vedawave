@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import MessageStatusIndicator from './MessageStatusIndicator';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import MessageInput from './MessageInput';
 import chatService from '../services/chatService';
-import { useAuth } from '../context/AuthContext';
+import MessageStatusIndicator from './MessageStatusIndicator';
+import MediaViewer from './MediaViewer';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -20,6 +21,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   const [openMenuId, setOpenMenuId] = useState(null);
   const [replyToMessage, setReplyToMessage] = useState(null);
   const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
+  const previousMessageCount = useRef(0);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const lastMessageRef = useRef(null);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -28,8 +34,8 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
         const messages = await chatService.getMessages(token, chat.id);
         setChatMessages(messages);
         
-        // Mark messages as seen and trigger chat list refresh for unread count update
-        window.dispatchEvent(new CustomEvent('messagesSeen', { detail: { chatId: chat.id } }));
+        // Mark messages as seen immediately when chat is opened
+        await markMessagesAsSeen();
       } catch (error) {
         console.error('Error loading messages:', error);
       } finally {
@@ -52,21 +58,90 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     );
     
     if (newMessages.length > 0) {
-      setChatMessages(prev => [...prev, ...newMessages]);
+      const wasAtBottom = isUserAtBottom();
+      setChatMessages(prev => {
+        const updated = [...prev, ...newMessages];
+        
+        // Force scroll to bottom when new messages arrive if user was at bottom
+        if (wasAtBottom) {
+          // Use multiple attempts to ensure scroll happens
+          setTimeout(() => scrollToBottom('smooth'), 50);
+          setTimeout(() => scrollToBottom('smooth'), 150);
+          setTimeout(() => scrollToBottom('smooth'), 300);
+        }
+        
+        return updated;
+      });
       
-      // Mark new messages as seen if chat is currently active
-      // This will trigger the backend to update message status to 'seen'
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('messagesSeen', { detail: { chatId: chat.id } }));
-      }, 500); // Small delay to ensure messages are rendered
+      // Immediately mark new messages as seen when they arrive in the active chat
+      // This automatically updates the status to 'seen' and removes unread badge
+      setTimeout(async () => {
+        await markMessagesAsSeen();
+      }, 100); // Very small delay to ensure messages are added to state first
     }
-  }, [messages, chat.id, chatMessages]);
+  }, [messages, chat.id]);
 
+  // Check if user is at the bottom of the chat
+  const isUserAtBottom = () => {
+    if (!messagesContainerRef.current) return true;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    return scrollHeight - scrollTop - clientHeight < 50; // 50px threshold for more sensitive detection
+  };
+
+  // Scroll to bottom function
+  const scrollToBottom = (behavior = 'smooth') => {
+    bottomRef.current?.scrollIntoView({ behavior });
+  };
+
+  // Track message count to detect new messages vs status updates
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const currentMessageCount = chatMessages.length;
+    
+    // Only scroll to bottom if:
+    // 1. New messages were added (count increased)
+    // 2. This is the initial load (previousMessageCount is 0)
+    if (currentMessageCount > previousMessageCount.current) {
+      const wasAtBottom = isUserAtBottom();
+      // Only auto-scroll if user was already at bottom or it's the initial load
+      if (wasAtBottom || previousMessageCount.current === 0) {
+        // Use requestAnimationFrame for smoother scrolling
+        requestAnimationFrame(() => {
+          setTimeout(() => scrollToBottom('smooth'), 100);
+        });
+      }
+      previousMessageCount.current = currentMessageCount;
+    } else if (previousMessageCount.current === 0 && currentMessageCount > 0) {
+      // Initial load case - instant scroll
+      requestAnimationFrame(() => {
+        setTimeout(() => scrollToBottom('auto'), 150);
+      });
+      previousMessageCount.current = currentMessageCount;
+    }
+    // If messageCount is same, it means only status/content updates, don't scroll
   }, [chatMessages]);
 
-  // Listen for message deletion events and status updates
+  // Handle scroll events to detect when user scrolls up
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const atBottom = isUserAtBottom();
+      setIsUserScrolledUp(!atBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to bottom on initial load
+  useEffect(() => {
+    if (!loading && chatMessages.length > 0) {
+      setTimeout(() => scrollToBottom('auto'), 100);
+    }
+  }, [loading]);
+
+  // Listen for WebSocket events to update messages in real-time
   useEffect(() => {
     const handleMessageDeleted = (event) => {
       const { messageId } = event.detail;
@@ -97,13 +172,30 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
 
     const handleMessageStatusUpdate = (event) => {
       const { messageId, status, chatId } = event.detail;
+      console.log('Status update received:', { messageId, status, chatId, currentChatId: chat.id });
       // Only update if this is the current chat
       if (chatId === chat.id) {
-        setChatMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, status }
-            : msg
-        ));
+        setChatMessages(prev => {
+          const updated = prev.map(msg => 
+            msg.id === messageId 
+              ? { ...msg, status }
+              : msg
+          );
+          console.log('Updated messages with new status:', updated.find(m => m.id === messageId));
+          return updated;
+        });
+      }
+    };
+
+    // Handle new messages arriving via WebSocket
+    const handleNewMessage = (event) => {
+      const { chatId } = event.detail;
+      // Only auto-scroll if this is the current chat and user is at bottom
+      if (chatId === chat.id && isUserAtBottom()) {
+        // Force scroll to bottom with multiple attempts
+        setTimeout(() => scrollToBottom('smooth'), 100);
+        setTimeout(() => scrollToBottom('smooth'), 250);
+        setTimeout(() => scrollToBottom('smooth'), 500);
       }
     };
 
@@ -111,14 +203,48 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     window.addEventListener('messageEdited', handleMessageEdited);
     window.addEventListener('messageReaction', handleMessageReaction);
     window.addEventListener('messageStatusUpdate', handleMessageStatusUpdate);
+    window.addEventListener('newMessage', handleNewMessage);
     
     return () => {
       window.removeEventListener('messageDeleted', handleMessageDeleted);
       window.removeEventListener('messageEdited', handleMessageEdited);
       window.removeEventListener('messageReaction', handleMessageReaction);
       window.removeEventListener('messageStatusUpdate', handleMessageStatusUpdate);
+      window.removeEventListener('newMessage', handleNewMessage);
     };
   }, [chat.id]);
+
+  // Auto-mark messages as seen when window gets focus (user comes back to tab)
+  useEffect(() => {
+    const handleWindowFocus = async () => {
+      await markMessagesAsSeen();
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [chat.id]);
+
+  // Function to mark messages as seen
+  const markMessagesAsSeen = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chats/${chat.id}/messages/mark-seen`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Dispatch event to update chat list for badge updates
+        window.dispatchEvent(new CustomEvent('messagesSeen', { detail: { chatId: chat.id } }));
+      }
+    } catch (error) {
+      console.error('Error marking messages as seen:', error);
+    }
+  };
 
   const handleSendMessage = (content, messageType, attachments) => {
     const messageData = {
@@ -192,6 +318,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(null);
   const [commonEmojis] = useState(['👍', '❤️', '😂', '😢', '😮', '😡', '👎', '🎉']);
+  const [selectedMedia, setSelectedMedia] = useState({ show: false, src: '', type: '' });
 
 
   const handleEmojiReaction = async (messageId, emoji) => {
@@ -278,7 +405,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       )}
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef} 
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {loading ? (
           <p className="text-gray-600">Loading messages...</p>
         ) : (
@@ -304,9 +435,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 </span>
               </div>
               <div className="space-y-4">
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                     <div
                       key={message.id}
+                      ref={index === messages.length - 1 ? lastMessageRef : null}
                       className={`flex ${message.sender_id === actualCurrentUser.id ? 'justify-end' : 'justify-start'}`}
                       onMouseEnter={() => setHoveredMessage(message.id)}
                       onMouseLeave={() => setHoveredMessage(null)}
@@ -386,7 +518,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                       className="max-w-xs max-h-64 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                                       onClick={() => {
                                         // Open image in new tab
-                                        window.open(`${FILE_BASE_URL}${attachment.file_url}`, '_blank');
+                                        setSelectedMedia({
+  show: true,
+  src: `${FILE_BASE_URL}${attachment.file_url}`,
+  type: attachment.file_type
+});
                                       }}
                                     />
                                     <div className={`text-xs mt-1 px-2 py-1 rounded ${
@@ -637,6 +773,14 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
           </div>
         )}
       </div>
+      
+      {/* Media Viewer Modal */}
+      <MediaViewer
+        show={selectedMedia.show}
+        onClose={() => setSelectedMedia({ show: false, src: '', type: '' })}
+        src={selectedMedia.src}
+        type={selectedMedia.type}
+      />
     </div>
   );
 };

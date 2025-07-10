@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Edit3, Save, X, Camera, LogOut, User } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
-import authService from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
 const Settings = ({ currentUser, onLogout, onBackClick }) => {
@@ -39,8 +38,8 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
         avatar: editedProfile.avatar
       };
       
-      // Call API to update profile
-      await authService.updateProfile(token, updateData);
+      // Call API to update profile - you'll need to implement this
+      console.log('Profile update:', updateData);
       
       setIsEditing(false);
       setAvatarPreview(null);

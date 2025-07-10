@@ -37,18 +37,33 @@ const ChatApp = () => {
       loadInitialData();
     }
 
-    // Listen for new messages to refresh chat list for unread count updates
-    const handleNewMessage = () => {
+    // Function to refresh chat list
+    const refreshChatList = async () => {
       if (token) {
-        chatService.getChats(token).then(setChats).catch(console.error);
+        try {
+          const chatsData = await chatService.getChats(token);
+          setChats(chatsData);
+          console.log('Chat list refreshed:', chatsData);
+        } catch (error) {
+          console.error('Error refreshing chat list:', error);
+        }
+      }
+    };
+
+    // Listen for new messages to refresh chat list for unread count updates
+    const handleNewMessage = (event) => {
+      console.log('New message event received:', event.detail);
+      // Only refresh if the message is not for the currently selected chat
+      // If it's for the current chat, the badges should already be updated by markMessagesAsSeen
+      if (!selectedChat || event.detail.chatId !== selectedChat.id) {
+        refreshChatList();
       }
     };
 
     // Listen for when messages are seen to refresh chat list for unread count updates
-    const handleMessagesSeen = () => {
-      if (token) {
-        chatService.getChats(token).then(setChats).catch(console.error);
-      }
+    const handleMessagesSeen = (event) => {
+      console.log('Messages seen event received:', event.detail);
+      refreshChatList();
     };
 
     window.addEventListener('newMessage', handleNewMessage);
@@ -58,7 +73,7 @@ const ChatApp = () => {
       window.removeEventListener('newMessage', handleNewMessage);
       window.removeEventListener('messagesSeen', handleMessagesSeen);
     };
-  }, [token]);
+  }, [token, selectedChat]);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
