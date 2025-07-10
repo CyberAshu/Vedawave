@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import MessageStatusIndicator from './MessageStatusIndicator';
 import { useSocket } from '../context/SocketContext';
 import MessageInput from './MessageInput';
 import chatService from '../services/chatService';
@@ -26,6 +27,9 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       try {
         const messages = await chatService.getMessages(token, chat.id);
         setChatMessages(messages);
+        
+        // Mark messages as seen and trigger chat list refresh for unread count update
+        window.dispatchEvent(new CustomEvent('messagesSeen', { detail: { chatId: chat.id } }));
       } catch (error) {
         console.error('Error loading messages:', error);
       } finally {
@@ -49,6 +53,12 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     
     if (newMessages.length > 0) {
       setChatMessages(prev => [...prev, ...newMessages]);
+      
+      // Mark new messages as seen if chat is currently active
+      // This will trigger the backend to update message status to 'seen'
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('messagesSeen', { detail: { chatId: chat.id } }));
+      }, 500); // Small delay to ensure messages are rendered
     }
   }, [messages, chat.id, chatMessages]);
 
@@ -56,7 +66,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // Listen for message deletion events
+  // Listen for message deletion events and status updates
   useEffect(() => {
     const handleMessageDeleted = (event) => {
       const { messageId } = event.detail;
@@ -85,16 +95,30 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       ));
     };
 
+    const handleMessageStatusUpdate = (event) => {
+      const { messageId, status, chatId } = event.detail;
+      // Only update if this is the current chat
+      if (chatId === chat.id) {
+        setChatMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status }
+            : msg
+        ));
+      }
+    };
+
     window.addEventListener('messageDeleted', handleMessageDeleted);
     window.addEventListener('messageEdited', handleMessageEdited);
     window.addEventListener('messageReaction', handleMessageReaction);
+    window.addEventListener('messageStatusUpdate', handleMessageStatusUpdate);
     
     return () => {
       window.removeEventListener('messageDeleted', handleMessageDeleted);
       window.removeEventListener('messageEdited', handleMessageEdited);
       window.removeEventListener('messageReaction', handleMessageReaction);
+      window.removeEventListener('messageStatusUpdate', handleMessageStatusUpdate);
     };
-  }, []);
+  }, [chat.id]);
 
   const handleSendMessage = (content, messageType, attachments) => {
     const messageData = {
@@ -259,7 +283,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
           <p className="text-gray-600">Loading messages...</p>
         ) : (
           Object.entries(chatMessages.reduce((acc, message) => {
-            const messageDate = new Date(message.created_at).toDateString();
+            const messageDate = new Date(message.created_at + 'Z').toDateString();
             if(!acc[messageDate]){
               acc[messageDate] = [];
             }
@@ -416,9 +440,18 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                       </div>
                     )}
                   </div>
-                  <div className="text-xs opacity-70 self-end">
-                    {new Date(message.created_at).toLocaleTimeString()}
-                    {message.is_edited && <span className="ml-1">(edited)</span>}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="opacity-70">
+                      {new Date(message.created_at + 'Z').toLocaleTimeString()}
+                      {message.is_edited && (
+                        <span className="ml-1">(edited)</span>
+                      )}
+                    </div>
+                    {message.sender_id === actualCurrentUser.id && (
+                      <div className="ml-2 flex items-center justify-center">
+                        <MessageStatusIndicator status={message.status} />
+                      </div>
+                    )}
                   </div>
                 </div>
                 

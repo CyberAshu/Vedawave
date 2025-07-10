@@ -36,6 +36,28 @@ const ChatApp = () => {
     if (token) {
       loadInitialData();
     }
+
+    // Listen for new messages to refresh chat list for unread count updates
+    const handleNewMessage = () => {
+      if (token) {
+        chatService.getChats(token).then(setChats).catch(console.error);
+      }
+    };
+
+    // Listen for when messages are seen to refresh chat list for unread count updates
+    const handleMessagesSeen = () => {
+      if (token) {
+        chatService.getChats(token).then(setChats).catch(console.error);
+      }
+    };
+
+    window.addEventListener('newMessage', handleNewMessage);
+    window.addEventListener('messagesSeen', handleMessagesSeen);
+    
+    return () => {
+      window.removeEventListener('newMessage', handleNewMessage);
+      window.removeEventListener('messagesSeen', handleMessagesSeen);
+    };
   }, [token]);
 
   const handleChatSelect = (chat) => {

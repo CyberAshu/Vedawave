@@ -18,113 +18,171 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const { token, user } = useAuth();
 
   useEffect(() => {
-    if (token && user) {
-      const ws = new WebSocket(`${WS_BASE_URL}/${token}`);
+    let ws;
+    let interval;
+    
+    const connectWebSocket = () => {
+      if (!token || !user) return;
+      
+      console.log('Attempting to connect WebSocket...');
+      ws = new WebSocket(`${WS_BASE_URL}/${token}`);
       
       ws.onopen = () => {
         console.log('WebSocket connected');
         setConnected(true);
         setSocket(ws);
+        setReconnectAttempts(0);
+        
+        // Start heartbeat
+        interval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 30000); // Send ping every 30 seconds
       };
       
       ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'message') {
-          setMessages(prev => [...prev, data.message]);
-        } else if (data.type === 'message_deleted') {
-          // Handle message deletion - update both messages state and trigger re-render
-          setMessages(prev => prev.map(msg => 
-            msg.id === data.message_id 
-              ? { ...msg, is_deleted: true, content: 'This message was deleted' }
-              : msg
-          ));
-          // Also trigger a manual update for any chat that might be displaying these messages
-          window.dispatchEvent(new CustomEvent('messageDeleted', { detail: { messageId: data.message_id } }));
-        } else if (data.type === 'message_edited') {
-          // Handle message edit - update both messages state and trigger re-render
-          setMessages(prev => prev.map(msg => 
-            msg.id === data.message_id 
-              ? { ...msg, content: data.content, is_edited: true }
-              : msg
-          ));
-          // Also trigger a manual update for any chat that might be displaying these messages
-          window.dispatchEvent(new CustomEvent('messageEdited', { 
-            detail: { 
-              messageId: data.message_id, 
-              content: data.content, 
-              is_edited: true 
-            } 
-          }));
-        } else if (data.type === 'reaction') {
-          // Handle message reaction - update both messages state and trigger re-render
-          setMessages(prev => prev.map(msg => 
-            msg.id === data.message_id 
-              ? { ...msg, reactions: data.reactions }
-              : msg
-          ));
-          // Also trigger a manual update for any chat that might be displaying these messages
-          window.dispatchEvent(new CustomEvent('messageReaction', { 
-            detail: { 
-              messageId: data.message_id, 
-              reactions: data.reactions 
-            } 
-          }));
-        } else if (data.type === 'friend_request') {
-          // Handle friend request notification
-          if (data.action === 'received') {
-            setFriendRequests(prev => [...prev, data.request]);
-            // Show notification
-            if (window.Notification && Notification.permission === 'granted') {
-              new Notification('New Friend Request', {
-                body: `${data.request.sender.name} sent you a friend request`,
-                icon: '/icon-192x192.png'
-              });
-            }
-          }
-        } else if (data.type === 'typing') {
-          setTypingUsers(prev => ({
-            ...prev,
-            [data.chat_id]: {
-              ...prev[data.chat_id],
-              [data.user_id]: data.is_typing
-            }
-          }));
+          const data = JSON.parse(event.data);
           
-          if (data.is_typing) {
-            setTimeout(() => {
-              setTypingUsers(prev => ({
-                ...prev,
-                [data.chat_id]: {
-                  ...prev[data.chat_id],
-                  [data.user_id]: false
-                }
-              }));
-            }, 3000);
+          if (data.type === 'message') {
+            setMessages(prev => [...prev, data.message]);
+            // Trigger chat list refresh for unread count update
+            window.dispatchEvent(new CustomEvent('newMessage', { detail: { chatId: data.message.chat_id } }));
+          } else if (data.type === 'message_status') {
+            // Handle message status updates (delivered, seen)
+            setMessages(prev => prev.map(msg => 
+              msg.id === data.message_id 
+                ? { ...msg, status: data.status }
+                : msg
+            ));
+            // Trigger event for ChatWindow to update the message status in real-time
+            window.dispatchEvent(new CustomEvent('messageStatusUpdate', { 
+              detail: { 
+                messageId: data.message_id, 
+                status: data.status,
+                chatId: data.chat_id
+              } 
+            }));
+          } else if (data.type === 'message_deleted') {
+            // Handle message deletion - update both messages state and trigger re-render
+            setMessages(prev => prev.map(msg => 
+              msg.id === data.message_id 
+                ? { ...msg, is_deleted: true, content: 'This message was deleted' }
+                : msg
+            ));
+            // Also trigger a manual update for any chat that might be displaying these messages
+            window.dispatchEvent(new CustomEvent('messageDeleted', { detail: { messageId: data.message_id } }));
+          } else if (data.type === 'message_edited') {
+            // Handle message edit - update both messages state and trigger re-render
+            setMessages(prev => prev.map(msg => 
+              msg.id === data.message_id 
+                ? { ...msg, content: data.content, is_edited: true }
+                : msg
+            ));
+            // Also trigger a manual update for any chat that might be displaying these messages
+            window.dispatchEvent(new CustomEvent('messageEdited', { 
+              detail: { 
+                messageId: data.message_id, 
+                content: data.content, 
+                is_edited: true 
+              } 
+            }));
+          } else if (data.type === 'reaction') {
+            // Handle message reaction - update both messages state and trigger re-render
+            setMessages(prev => prev.map(msg => 
+              msg.id === data.message_id 
+                ? { ...msg, reactions: data.reactions }
+                : msg
+            ));
+            // Also trigger a manual update for any chat that might be displaying these messages
+            window.dispatchEvent(new CustomEvent('messageReaction', { 
+              detail: { 
+                messageId: data.message_id, 
+                reactions: data.reactions 
+              } 
+            }));
+          } else if (data.type === 'friend_request') {
+            // Handle friend request notification
+            if (data.action === 'received') {
+              setFriendRequests(prev => [...prev, data.request]);
+              // Show notification
+              if (window.Notification && Notification.permission === 'granted') {
+                new Notification('New Friend Request', {
+                  body: `${data.request.sender.name} sent you a friend request`,
+                  icon: '/icon-192x192.png'
+                });
+              }
+            }
+          } else if (data.type === 'typing') {
+            setTypingUsers(prev => ({
+              ...prev,
+              [data.chat_id]: {
+                ...prev[data.chat_id],
+                [data.user_id]: data.is_typing
+              }
+            }));
+            
+            if (data.is_typing) {
+              setTimeout(() => {
+                setTypingUsers(prev => ({
+                  ...prev,
+                  [data.chat_id]: {
+                    ...prev[data.chat_id],
+                    [data.user_id]: false
+                  }
+                }));
+              }, 3000);
+            }
+          } else if (data.type === 'pong') {
+            // Handle pong response (heartbeat acknowledgment)
+            console.log('Received pong from server');
           }
-        }
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        };
+        
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected', event);
         setConnected(false);
         setSocket(null);
+        
+        // Clear heartbeat
+        if (interval) {
+          clearInterval(interval);
+        }
+        
+        // Attempt to reconnect if not a normal closure
+        if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts < 5) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
+          console.log(`Attempting to reconnect in ${delay}ms... (attempt ${reconnectAttempts + 1}/5)`);
+          
+          setTimeout(() => {
+            setReconnectAttempts(prev => prev + 1);
+            connectWebSocket();
+          }, delay);
+        }
       };
       
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
       };
-      
-      return () => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.close();
-        }
-      };
+    };
+    
+    if (token && user) {
+      connectWebSocket();
     }
-  }, [token, user]);
+    
+    return () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close(1000); // Normal closure
+      }
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [token, user, reconnectAttempts]);
 
   const sendMessage = (content, chatId, messageType = 'text', attachments = [], replyToMessageId = null) => {
     if (socket && connected) {

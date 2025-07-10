@@ -114,11 +114,9 @@ const Friends = ({ onStartChat }) => {
     setSearchQuery(query);
     
     // Debounce search
-    const timeoutId = setTimeout(() => {
+    setTimeout(() => {
       searchUsers(query);
     }, 500);
-
-    return () => clearTimeout(timeoutId);
   };
 
 
@@ -262,8 +260,8 @@ const Friends = ({ onStartChat }) => {
     console.log('Current User:', currentUser);
     console.log('All Friend Requests:', uniqueRequests);
     
-    const receivedRequests = uniqueRequests.filter(req => req.receiver.id === currentUser.id && req.status === 'pending');
-    const sentRequests = uniqueRequests.filter(req => req.sender.id === currentUser.id && req.status === 'pending');
+    const receivedRequests = uniqueRequests.filter(req => req.receiver?.id === currentUser?.id && req.status === 'pending');
+    const sentRequests = uniqueRequests.filter(req => req.sender?.id === currentUser?.id && req.status === 'pending');
     
     console.log('Received Requests:', receivedRequests);
     console.log('Sent Requests:', sentRequests);
@@ -410,7 +408,7 @@ const Friends = ({ onStartChat }) => {
               const uniqueRequests = allRequests.filter((request, index, self) => 
                 index === self.findIndex(r => r.id === request.id)
               );
-              const pendingCount = uniqueRequests.filter(req => req.receiver.id === currentUser.id && req.status === 'pending').length;
+              const pendingCount = uniqueRequests.filter(req => req.receiver?.id === currentUser?.id && req.status === 'pending').length;
               return pendingCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                   {pendingCount}

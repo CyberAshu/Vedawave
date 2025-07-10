@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Users, User } from 'lucide-react';
 import Friends from './Friends';
+import Badge from './Badge';
 
 const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentUser, onProfileClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +91,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
                   </h3>
                   {chat.last_message && (
                     <span className="text-xs text-gray-500">
-                      {new Date(chat.last_message.created_at).toLocaleTimeString()}
+                      {new Date(chat.last_message.created_at + 'Z').toLocaleTimeString()}
                     </span>
                   )}
                 </div>
@@ -109,6 +110,9 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
                     <span className="text-xs text-green-500 font-medium">Active</span>
                   )}
                 </div>
+                {chat.unread_count > 0 && (
+                    <Badge count={chat.unread_count} />
+                )}
               </div>
             </div>
           ))
