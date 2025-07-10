@@ -43,7 +43,15 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       }
     };
 
+    // Set the current active chat for notification purposes
+    window.currentActiveChatId = chat.id;
+    
     loadMessages();
+    
+    // Cleanup on unmount or chat change
+    return () => {
+      window.currentActiveChatId = null;
+    };
   }, [chat, token]);
 
   useEffect(() => {

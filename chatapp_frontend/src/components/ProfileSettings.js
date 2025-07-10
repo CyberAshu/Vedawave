@@ -8,6 +8,7 @@ import {
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
+import notificationService from '../services/notificationService';
 
 const ProfileSettings = ({ currentUser, onLogout, onBackClick }) => {
   const { token } = useAuth();
@@ -72,6 +73,63 @@ const ProfileSettings = ({ currentUser, onLogout, onBackClick }) => {
       return () => clearTimeout(timer);
     }
   }, [success, error]);
+
+  // Load notification settings on component mount
+  useEffect(() => {
+    const loadNotificationSettings = async () => {
+      try {
+        const settings = notificationService.getSettings();
+        setPreferences(prev => ({
+          ...prev,
+          notifications: {
+            ...prev.notifications,
+            messages: settings.messages,
+            friendRequests: settings.friendRequests,
+            sounds: settings.sounds,
+            email: settings.email
+          }
+        }));
+      } catch (error) {
+        console.error('Error loading notification settings:', error);
+      }
+    };
+
+    loadNotificationSettings();
+  }, []);
+
+  // Handle notification setting changes
+  const handleNotificationChange = async (setting, value) => {
+    try {
+      // Update local state
+      setPreferences(prev => ({
+        ...prev,
+        notifications: { ...prev.notifications, [setting]: value }
+      }));
+
+      // Update notification service
+      notificationService.updateSetting(setting, value);
+
+      // Request permission for browser notifications if needed
+      if ((setting === 'messages' || setting === 'friendRequests') && value) {
+        const hasPermission = await notificationService.requestPermission();
+        if (!hasPermission) {
+          setError('Please enable browser notifications in your browser settings for this feature to work.');
+          // Revert the setting if permission denied
+          setPreferences(prev => ({
+            ...prev,
+            notifications: { ...prev.notifications, [setting]: false }
+          }));
+          notificationService.updateSetting(setting, false);
+          return;
+        }
+      }
+
+      setSuccess(`${setting.charAt(0).toUpperCase() + setting.slice(1)} notifications ${value ? 'enabled' : 'disabled'}!`);
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      setError('Failed to update notification settings.');
+    }
+  };
 
   const getAvatarColor = (name) => {
     const colors = [
@@ -520,10 +578,7 @@ const ProfileSettings = ({ currentUser, onLogout, onBackClick }) => {
                   type="checkbox" 
                   className="sr-only peer" 
                   checked={preferences.notifications.messages}
-                  onChange={(e) => setPreferences({
-                    ...preferences,
-                    notifications: { ...preferences.notifications, messages: e.target.checked }
-                  })}
+                  onChange={(e) => handleNotificationChange('messages', e.target.checked)}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
@@ -542,10 +597,7 @@ const ProfileSettings = ({ currentUser, onLogout, onBackClick }) => {
                   type="checkbox" 
                   className="sr-only peer" 
                   checked={preferences.notifications.friendRequests}
-                  onChange={(e) => setPreferences({
-                    ...preferences,
-                    notifications: { ...preferences.notifications, friendRequests: e.target.checked }
-                  })}
+                  onChange={(e) => handleNotificationChange('friendRequests', e.target.checked)}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
@@ -564,13 +616,32 @@ const ProfileSettings = ({ currentUser, onLogout, onBackClick }) => {
                   type="checkbox" 
                   className="sr-only peer" 
                   checked={preferences.notifications.sounds}
-                  onChange={(e) => setPreferences({
-                    ...preferences,
-                    notifications: { ...preferences.notifications, sounds: e.target.checked }
-                  })}
+                  onChange={(e) => handleNotificationChange('sounds', e.target.checked)}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
+            </div>
+
+            {/* Test Notification Button */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-800">Test Notifications</p>
+                  <p className="text-sm text-blue-600">Send a test notification to verify your settings</p>
+                </div>
+                <button
+                  onClick={() => {
+                    notificationService.showMessageNotification(
+                      { name: 'VedaWave', id: 'test' },
+                      'This is a test notification! Your notifications are working correctly.',
+                      'test'
+                    );
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Test Now
+                </button>
+              </div>
             </div>
           </div>
 

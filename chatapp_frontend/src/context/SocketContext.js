@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import notificationService from '../services/notificationService';
 const WS_BASE_URL = process.env.REACT_APP_WS_BASE_URL;
 
 const SocketContext = createContext();
@@ -50,6 +51,16 @@ export const SocketProvider = ({ children }) => {
           
           if (data.type === 'message') {
             setMessages(prev => [...prev, data.message]);
+            
+            // Show notification for new message if user is not focused on the current chat
+            if (!notificationService.isUserFocusedOnChat(data.message.chat_id)) {
+              notificationService.showMessageNotification(
+                data.sender || { name: 'Someone', id: data.message.sender_id },
+                data.message.content,
+                data.message.chat_id
+              );
+            }
+            
             // Trigger chat list refresh for unread count update
             window.dispatchEvent(new CustomEvent('newMessage', { detail: { chatId: data.message.chat_id } }));
           } else if (data.type === 'message_status') {
@@ -114,13 +125,11 @@ export const SocketProvider = ({ children }) => {
             // Handle friend request notification
             if (data.action === 'received') {
               setFriendRequests(prev => [...prev, data.request]);
-              // Show notification
-              if (window.Notification && Notification.permission === 'granted') {
-                new Notification('New Friend Request', {
-                  body: `${data.request.sender.name} sent you a friend request`,
-                  icon: '/icon-192x192.png'
-                });
-              }
+              
+              // Show notification using notification service
+              notificationService.showFriendRequestNotification(
+                data.request.sender || { name: 'Someone', id: data.request.sender_id }
+              );
             }
           } else if (data.type === 'typing') {
             setTypingUsers(prev => ({

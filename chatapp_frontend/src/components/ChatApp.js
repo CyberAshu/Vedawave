@@ -5,6 +5,8 @@ import chatService from '../services/chatService';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import ProfileSettings from './ProfileSettings';
+import NotificationBanner from './NotificationBanner';
+import notificationService from '../services/notificationService';
 
 const ChatApp = () => {
   const { user, token, logout } = useAuth();
@@ -66,18 +68,49 @@ const ChatApp = () => {
       refreshChatList();
     };
 
+    // Handle notification clicks
+    const handleNotificationClick = (event) => {
+      const { type, chatId, senderId } = event.detail;
+      
+      if (type === 'message' && chatId) {
+        // Find the chat and select it
+        const chat = chats.find(c => c.id === chatId);
+        if (chat) {
+          setSelectedChat(chat);
+          setShowSettings(false);
+          window.currentActiveChatId = chatId;
+          
+          // Close sidebar on mobile
+          if (window.innerWidth < 768) {
+            setShowSidebar(false);
+          }
+        }
+      } else if (type === 'friend_request') {
+        // Navigate to friend requests section
+        setShowSettings(true);
+        setSelectedChat(null);
+        window.currentActiveChatId = null;
+      }
+    };
+
     window.addEventListener('newMessage', handleNewMessage);
     window.addEventListener('messagesSeen', handleMessagesSeen);
+    window.addEventListener('notificationClick', handleNotificationClick);
     
     return () => {
       window.removeEventListener('newMessage', handleNewMessage);
       window.removeEventListener('messagesSeen', handleMessagesSeen);
+      window.removeEventListener('notificationClick', handleNotificationClick);
     };
   }, [token, selectedChat]);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
     setShowSettings(false); // Reset settings view when chat is selected
+    
+    // Set current active chat ID for notification service
+    window.currentActiveChatId = chat ? chat.id : null;
+    
     // Close sidebar on mobile when chat is selected
     if (window.innerWidth < 768) {
       setShowSidebar(false);
@@ -97,6 +130,10 @@ const ChatApp = () => {
   const handleProfileClick = () => {
     setShowSettings(true);
     setSelectedChat(null);
+    
+    // Clear current active chat ID
+    window.currentActiveChatId = null;
+    
     // Close sidebar on mobile when profile is clicked
     if (window.innerWidth < 768) {
       setShowSidebar(false);
@@ -117,6 +154,9 @@ const ChatApp = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Notification Banner */}
+      <NotificationBanner />
+      
       {/* Mobile Sidebar Overlay */}
       {showSidebar && (
         <div 
