@@ -28,9 +28,14 @@ const chatService = {
     return response.data;
   },
 
-  getMessages: async (token, chatId) => {
+  getMessages: async (token, chatId, limit = 10, offset = 0) => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
+    
     const response = await axios.get(
-      `${REACT_APP_API_BASE_URL}/chats/${chatId}/messages`,
+      `${REACT_APP_API_BASE_URL}/chats/${chatId}/messages?${params}`,
       createAuthHeaders(token)
     );
     return response.data;
@@ -69,6 +74,30 @@ const chatService = {
       { emoji },
       createAuthHeaders(token)
     );
+    return response.data;
+  },
+
+  deleteChat: async (token, chatId) => {
+    const response = await axios.delete(
+      `${REACT_APP_API_BASE_URL}/chats/${chatId}`,
+      createAuthHeaders(token)
+    );
+    return response.data;
+  },
+
+  deleteMultipleChats: async (token, chatIds) => {
+    // Ensure chatIds is always an array
+    const idsArray = Array.isArray(chatIds) ? chatIds : [chatIds];
+    
+    const response = await axios({
+      url: `${REACT_APP_API_BASE_URL}/chats/bulk`,
+      method: 'DELETE',
+      headers: {
+        ...createAuthHeaders(token).headers,
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({ chat_ids: idsArray })
+    });
     return response.data;
   }
 };

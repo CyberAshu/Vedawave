@@ -52,6 +52,9 @@ const ChatApp = () => {
       }
     };
 
+    // Make refresh function available globally for chat deletion
+    window.refreshChatList = refreshChatList;
+
     // Listen for new messages to refresh chat list for unread count updates
     const handleNewMessage = (event) => {
       console.log('New message event received:', event.detail);
@@ -144,6 +147,22 @@ const ChatApp = () => {
     setShowSettings(false);
   };
 
+  // Handle chat updates (for deletion)
+  const handleChatsUpdate = async () => {
+    try {
+      const chatsData = await chatService.getChats(token);
+      setChats(chatsData);
+      
+      // If the currently selected chat was deleted, clear the selection
+      if (selectedChat && !chatsData.find(chat => chat.id === selectedChat.id)) {
+        setSelectedChat(null);
+        window.currentActiveChatId = null;
+      }
+    } catch (error) {
+      console.error('Error updating chats:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen bg-gray-100 items-center justify-center">
@@ -180,6 +199,7 @@ const ChatApp = () => {
           users={users}
           currentUser={user}
           onProfileClick={handleProfileClick}
+          onChatsUpdate={handleChatsUpdate}
         />
       </div>
 

@@ -5,6 +5,7 @@ import MessageInput from './MessageInput';
 import chatService from '../services/chatService';
 import MessageStatusIndicator from './MessageStatusIndicator';
 import MediaViewer from './MediaViewer';
+import MessageContent from './MessageContent';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -17,6 +18,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   const actualCurrentUser = user || currentUser;
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const MESSAGES_LIMIT = 10;
   const [hoveredMessage, setHoveredMessage] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [replyToMessage, setReplyToMessage] = useState(null);
@@ -26,13 +31,24 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   const previousMessageCount = useRef(0);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const lastMessageRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
+  const isScrollingRef = useRef(false);
 
   useEffect(() => {
     const loadMessages = async () => {
       setLoading(true);
+      setChatMessages([]);
+      setOffset(0);
+      setHasMoreMessages(true);
+      previousMessageCount.current = 0;
+      
       try {
-        const messages = await chatService.getMessages(token, chat.id);
-        setChatMessages(messages);
+        const messages = await chatService.getMessages(token, chat.id, MESSAGES_LIMIT, 0);
+        // API returns messages in descending order (newest first)
+        // Reverse them for chronological display (oldest first)
+        const chronologicalMessages = [...messages].reverse();
+        setChatMessages(chronologicalMessages);
+        setHasMoreMessages(messages.length === MESSAGES_LIMIT);
         
         // Mark messages as seen immediately when chat is opened
         await markMessagesAsSeen();
@@ -52,7 +68,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     return () => {
       window.currentActiveChatId = null;
     };
-  }, [chat, token]);
+  }, [chat.id, token]);
 
   useEffect(() => {
     setMessages(chatMessages);
@@ -70,24 +86,24 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       setChatMessages(prev => {
         const updated = [...prev, ...newMessages];
         
-        // Force scroll to bottom when new messages arrive if user was at bottom
-        if (wasAtBottom) {
-          // Use multiple attempts to ensure scroll happens
-          setTimeout(() => scrollToBottom('smooth'), 50);
-          setTimeout(() => scrollToBottom('smooth'), 150);
-          setTimeout(() => scrollToBottom('smooth'), 300);
+        // Smooth scroll to bottom if user was at bottom
+        if (wasAtBottom && !isScrollingRef.current) {
+          requestAnimationFrame(() => {
+            scrollToBottom('smooth');
+          });
         }
         
         return updated;
       });
       
-      // Immediately mark new messages as seen when they arrive in the active chat
-      // This automatically updates the status to 'seen' and removes unread badge
-      setTimeout(async () => {
-        await markMessagesAsSeen();
-      }, 100); // Very small delay to ensure messages are added to state first
+      // Mark new messages as seen
+      if (newMessages.some(msg => msg.sender_id !== actualCurrentUser.id)) {
+        setTimeout(async () => {
+          await markMessagesAsSeen();
+        }, 100);
+      }
     }
-  }, [messages, chat.id]);
+  }, [messages, chat.id, actualCurrentUser.id]);
 
   // Check if user is at the bottom of the chat
   const isUserAtBottom = () => {
@@ -96,58 +112,118 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
     return scrollHeight - scrollTop - clientHeight < 50; // 50px threshold for more sensitive detection
   };
 
-  // Scroll to bottom function
+  // Scroll to bottom function with debouncing
   const scrollToBottom = (behavior = 'smooth') => {
-    bottomRef.current?.scrollIntoView({ behavior });
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (bottomRef.current) {
+        isScrollingRef.current = true;
+        bottomRef.current.scrollIntoView({ behavior });
+        
+        // Reset scrolling flag after scroll completes
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, behavior === 'smooth' ? 500 : 100);
+      }
+    }, 50);
   };
 
   // Track message count to detect new messages vs status updates
   useEffect(() => {
     const currentMessageCount = chatMessages.length;
     
-    // Only scroll to bottom if:
-    // 1. New messages were added (count increased)
-    // 2. This is the initial load (previousMessageCount is 0)
-    if (currentMessageCount > previousMessageCount.current) {
-      const wasAtBottom = isUserAtBottom();
-      // Only auto-scroll if user was already at bottom or it's the initial load
-      if (wasAtBottom || previousMessageCount.current === 0) {
-        // Use requestAnimationFrame for smoother scrolling
-        requestAnimationFrame(() => {
-          setTimeout(() => scrollToBottom('smooth'), 100);
-        });
-      }
-      previousMessageCount.current = currentMessageCount;
-    } else if (previousMessageCount.current === 0 && currentMessageCount > 0) {
+    // Only handle initial load scrolling here
+    if (previousMessageCount.current === 0 && currentMessageCount > 0) {
       // Initial load case - instant scroll
-      requestAnimationFrame(() => {
-        setTimeout(() => scrollToBottom('auto'), 150);
-      });
+      setTimeout(() => scrollToBottom('auto'), 200);
+      previousMessageCount.current = currentMessageCount;
+    } else if (currentMessageCount > previousMessageCount.current) {
+      // Update count for new messages but don't scroll here
+      // (scrolling is handled in the socket message effect)
       previousMessageCount.current = currentMessageCount;
     }
-    // If messageCount is same, it means only status/content updates, don't scroll
   }, [chatMessages]);
 
-  // Handle scroll events to detect when user scrolls up
+  // Load older messages function with smooth UI
+  const loadOlderMessages = async () => {
+    if (loadingOlder || !hasMoreMessages) return;
+    
+    setLoadingOlder(true);
+    const newOffset = offset + MESSAGES_LIMIT;
+    
+    try {
+      const olderMessages = await chatService.getMessages(token, chat.id, MESSAGES_LIMIT, newOffset);
+      
+      if (olderMessages.length > 0) {
+        // Store current scroll position and first visible message
+        const container = messagesContainerRef.current;
+        const scrollHeightBefore = container.scrollHeight;
+        const scrollTopBefore = container.scrollTop;
+        
+        // API returns messages in descending order, reverse them for chronological order
+        const chronologicalOlderMessages = [...olderMessages].reverse();
+        
+        // Update state with smooth transition
+        setChatMessages(prev => {
+          const updated = [...chronologicalOlderMessages, ...prev];
+          
+          // Use requestAnimationFrame to ensure smooth scroll position restore
+          requestAnimationFrame(() => {
+            const scrollHeightAfter = container.scrollHeight;
+            const heightDifference = scrollHeightAfter - scrollHeightBefore;
+            container.scrollTop = scrollTopBefore + heightDifference;
+          });
+          
+          return updated;
+        });
+        
+        setOffset(newOffset);
+        setHasMoreMessages(olderMessages.length === MESSAGES_LIMIT);
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.error('Error loading older messages:', error);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
+  // Handle scroll events to detect when user scrolls up (removed infinite scroll)
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
+    let scrollTimeout;
     const handleScroll = () => {
-      const atBottom = isUserAtBottom();
-      setIsUserScrolledUp(!atBottom);
+      // Clear previous timeout
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      
+      // Debounce scroll handling
+      scrollTimeout = setTimeout(() => {
+        const atBottom = isUserAtBottom();
+        setIsUserScrolledUp(!atBottom);
+      }, 100);
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
   }, []);
 
-  // Scroll to bottom on initial load
+  // Cleanup timeouts on unmount
   useEffect(() => {
-    if (!loading && chatMessages.length > 0) {
-      setTimeout(() => scrollToBottom('auto'), 100);
-    }
-  }, [loading]);
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Listen for WebSocket events to update messages in real-time
   useEffect(() => {
@@ -328,6 +404,20 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   const [commonEmojis] = useState(['👍', '❤️', '😂', '😢', '😮', '😡', '👎', '🎉']);
   const [selectedMedia, setSelectedMedia] = useState({ show: false, src: '', type: '' });
 
+  // Memoize grouped messages for performance
+  const groupedMessages = React.useMemo(() => {
+    const grouped = chatMessages.reduce((acc, message) => {
+      const messageDate = new Date(message.created_at + 'Z').toDateString();
+      if(!acc[messageDate]){
+        acc[messageDate] = [];
+      }
+      acc[messageDate].push(message);
+      return acc;
+    }, {});
+    
+    return Object.entries(grouped);
+  }, [chatMessages]);
+
 
   const handleEmojiReaction = async (messageId, emoji) => {
     try {
@@ -421,15 +511,41 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
         {loading ? (
           <p className="text-gray-600">Loading messages...</p>
         ) : (
-          Object.entries(chatMessages.reduce((acc, message) => {
-            const messageDate = new Date(message.created_at + 'Z').toDateString();
-            if(!acc[messageDate]){
-              acc[messageDate] = [];
-            }
-            acc[messageDate].push(message);
-            return acc;
-          }, {})).map(([date, messages]) => (
-            <div key={date}>
+          <>
+            {/* Load More Button */}
+            {hasMoreMessages && !loadingOlder && (
+              <div className="flex justify-center py-4">
+                <button
+                  onClick={loadOlderMessages}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                  <span>Load Older Messages</span>
+                </button>
+              </div>
+            )}
+            
+            {/* Loading indicator for older messages */}
+            {loadingOlder && (
+              <div className="flex justify-center py-4">
+                <div className="flex items-center space-x-2 text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <span className="text-sm">Loading older messages...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* No more messages indicator */}
+            {!hasMoreMessages && chatMessages.length > MESSAGES_LIMIT && (
+              <div className="flex justify-center py-2">
+                <span className="text-xs text-gray-400">Beginning of conversation</span>
+              </div>
+            )}
+            
+            {groupedMessages.map(([date, messages]) => (
+              <div key={date}>
               <div className="text-center text-gray-500 text-sm font-medium mb-3 mt-2">
                 <span className="bg-gray-100 px-3 py-1 rounded-full">
                   {date === new Date().toDateString() ? 'Today' : 
@@ -509,7 +625,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                         {/* Display message content */}
                         {message.content && (
                           <div className="mb-2">
-                            {message.content}
+                            <MessageContent 
+                              content={message.content} 
+                              isOwnMessage={message.sender_id === actualCurrentUser.id}
+                            />
                           </div>
                         )}
                         
@@ -756,10 +875,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 )}
               </div>
             </div>
-          ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </>
         )}
         <div ref={bottomRef} />
       </div>

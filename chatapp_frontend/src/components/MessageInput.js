@@ -15,10 +15,37 @@ const MessageInput = ({ onSendMessage, chatId }) => {
   const { sendTypingIndicator } = useSocket();
   const { token } = useAuth();
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  
+  const CHARACTER_LIMIT = 500; // Changed from word limit to character limit
+  
+  // Helper function to count characters (including emojis properly)
+  const countCharacters = (text) => {
+    // Use Array.from to properly handle Unicode characters including emojis
+    return Array.from(text).length;
+  };
+  
+  // Helper function to truncate text to character limit
+  const truncateText = (text, limit) => {
+    const chars = Array.from(text);
+    return chars.slice(0, limit).join('');
+  };
+  
+  const characterCount = countCharacters(message);
+  const isOverLimit = characterCount > CHARACTER_LIMIT;
 
   const handleInputChange = (e) => {
-    setMessage(e.target.value);
+    const newValue = e.target.value;
+    
+    // Only update if within character limit or if user is deleting
+    if (countCharacters(newValue) <= CHARACTER_LIMIT || newValue.length < message.length) {
+      setMessage(newValue);
+    } else {
+      // Truncate to character limit
+      const truncatedValue = truncateText(newValue, CHARACTER_LIMIT);
+      setMessage(truncatedValue);
+    }
     
     // Handle typing indicator
     if (!isTyping) {
@@ -40,10 +67,15 @@ const MessageInput = ({ onSendMessage, chatId }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (message.trim() || attachments.length > 0) {
+    if ((message.trim() || attachments.length > 0) && !isOverLimit) {
       onSendMessage(message.trim(), 'text', attachments);
       setMessage('');
       setAttachments([]);
+      
+      // Reset textarea height to original state
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '46px';
+      }
       
       // Stop typing indicator
       if (isTyping) {
@@ -76,7 +108,14 @@ const MessageInput = ({ onSendMessage, chatId }) => {
   };
 
   const onEmojiClick = (emojiData) => {
-    setMessage(prevMessage => prevMessage + emojiData.emoji);
+    const newMessage = message + emojiData.emoji;
+    // Check if adding this emoji would exceed the limit
+    if (countCharacters(newMessage) <= CHARACTER_LIMIT) {
+      setMessage(newMessage);
+    } else {
+      // Show a brief warning or just don't add the emoji
+      console.warn('Adding this emoji would exceed the character limit');
+    }
     setShowEmojiPicker(false);
   };
 
@@ -143,27 +182,54 @@ const MessageInput = ({ onSendMessage, chatId }) => {
         />
         
         <div className="flex-1 min-w-0">
-          <textarea
-            value={message}
-            onChange={handleInputChange}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-            placeholder="Type your message here..."
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 block"
-            rows={1}
-            style={{ minHeight: '46px', height: '46px', lineHeight: '1.5' }}
-            onInput={(e) => {
-              // Reset height to auto to get accurate scrollHeight
-              e.target.style.height = 'auto';
-              // Set height based on content, with min and max constraints
-              const newHeight = Math.max(46, Math.min(e.target.scrollHeight, 120));
-              e.target.style.height = newHeight + 'px';
-            }}
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleInputChange}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !isOverLimit) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              placeholder="Type your message here..."
+              className={`w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 block ${
+                isOverLimit ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''
+              }`}
+              rows={1}
+              style={{ 
+                minHeight: '46px', 
+                lineHeight: '1.5',
+                paddingBottom: isOverLimit ? '40px' : '12px'
+              }}
+              onInput={(e) => {
+                // Reset height to auto to get accurate scrollHeight
+                e.target.style.height = 'auto';
+                // Set height based on content, with min and max constraints
+                const newHeight = Math.max(46, Math.min(e.target.scrollHeight, 200));
+                e.target.style.height = newHeight + 'px';
+              }}
+            />
+            
+            {/* Character count indicator */}
+            {isOverLimit && (
+              <div className="absolute bottom-1 left-0 right-0 px-4 pb-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-red-600">
+                    {characterCount}/{CHARACTER_LIMIT} characters - Limit exceeded
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {/* Character count indicator for messages nearing limit */}
+            {!isOverLimit && characterCount > CHARACTER_LIMIT * 0.8 && (
+              <div className="absolute bottom-1 right-4 text-xs text-gray-500">
+                {characterCount}/{CHARACTER_LIMIT}
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="relative" style={{ alignSelf: 'flex-end' }}>
@@ -188,13 +254,13 @@ const MessageInput = ({ onSendMessage, chatId }) => {
         
         <button
           type="submit"
-          disabled={!message.trim() && attachments.length === 0}
+          disabled={(!message.trim() && attachments.length === 0) || isOverLimit}
           className={`rounded-lg transition-all duration-200 flex-shrink-0 flex items-center justify-center ${
-            message.trim() || attachments.length > 0
+            (message.trim() || attachments.length > 0) && !isOverLimit
               ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
-          title="Send message"
+          title={isOverLimit ? 'Character limit exceeded' : 'Send message'}
           style={{ height: '46px', width: '46px', alignSelf: 'flex-end' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

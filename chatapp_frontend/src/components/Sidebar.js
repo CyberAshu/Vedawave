@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
-import { MessageCircle, Users, User } from 'lucide-react';
+import { MessageCircle, Users, User, Trash2, Check, X } from 'lucide-react';
 import Friends from './Friends';
 import Badge from './Badge';
 import ProfileModal from './ProfileModal';
+import chatService from '../services/chatService';
+import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentUser, onProfileClick, onStartChat }) => {
+const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentUser, onProfileClick, onStartChat, onChatsUpdate }) => {
+  const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [activeTab, setActiveTab] = useState('chats'); // chats or friends
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  
+  // Context menu and multi-select states
+  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, chatId: null });
+  const [selectedChats, setSelectedChats] = useState(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // 'single' or 'multiple'
+  const [deletingChats, setDeletingChats] = useState(false);
+  const [selectedChatIdForDeletion, setSelectedChatIdForDeletion] = useState(null);
 
   const filteredChats = (chats || []).filter(chat =>
     chat.other_user && chat.other_user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -63,10 +75,119 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
     }
   };
 
+  // Context menu handlers
+  const handleRightClick = (e, chatId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Right click on chat ID:', chatId);
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      chatId: chatId
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({ show: false, x: 0, y: 0, chatId: null });
+  };
+
+  // Multi-select handlers
+  const toggleChatSelection = (chatId) => {
+    const newSelected = new Set(selectedChats);
+    if (newSelected.has(chatId)) {
+      newSelected.delete(chatId);
+    } else {
+      newSelected.add(chatId);
+    }
+    setSelectedChats(newSelected);
+  };
+
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+    setSelectedChats(new Set());
+  };
+
+  const selectAllChats = () => {
+    const allChatIds = filteredChats.map(chat => chat.id);
+    setSelectedChats(new Set(allChatIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedChats(new Set());
+  };
+
+  // Delete handlers
+  const handleDeleteSingleChat = (chatId) => {
+    console.log('handleDeleteSingleChat called with chatId:', chatId);
+    setDeleteTarget('single');
+    setSelectedChatIdForDeletion(chatId); // Store in separate state
+    setShowDeleteModal(true);
+    closeContextMenu();
+  };
+
+  const handleDeleteMultipleChats = () => {
+    if (selectedChats.size === 0) return;
+    setDeleteTarget('multiple');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeletingChats(true);
+    try {
+      if (deleteTarget === 'single') {
+        console.log('Deleting single chat with ID:', selectedChatIdForDeletion);
+        if (!selectedChatIdForDeletion) {
+          throw new Error('Chat ID is null or undefined');
+        }
+        await chatService.deleteChat(token, selectedChatIdForDeletion);
+      } else if (deleteTarget === 'multiple') {
+        const chatIds = Array.from(selectedChats);
+        console.log('Deleting multiple chats with IDs:', chatIds);
+        await chatService.deleteMultipleChats(token, chatIds);
+      }
+      
+      // Refresh chats list
+      if (onChatsUpdate) {
+        await onChatsUpdate();
+      }
+      
+      // Reset states
+      setSelectedChats(new Set());
+      setIsMultiSelectMode(false);
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      setSelectedChatIdForDeletion(null);
+    } catch (error) {
+      console.error('Error deleting chat(s):', error);
+      alert('Error deleting chat(s). Please try again.');
+    } finally {
+      setDeletingChats(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteTarget(null);
+    setSelectedChatIdForDeletion(null);
+  };
+
+  // Click outside to close context menu
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.show) {
+        closeContextMenu();
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu.show]);
+
   const renderChatsTab = () => (
     <>
-      {/* Search */}
-      <div className="p-4">
+      {/* Search and Multi-Select Controls */}
+      <div className="p-4 space-y-3">
         <div className="relative">
           <input
             type="text"
@@ -75,6 +196,49 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 bg-gray-100 border-none rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+        
+        {/* Multi-Select Controls */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={toggleMultiSelectMode}
+            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              isMultiSelectMode 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+            }`}
+          >
+            {isMultiSelectMode ? 'Exit Select' : 'Select Multiple'}
+          </button>
+          
+          {isMultiSelectMode && (
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-500">
+                {selectedChats.size} selected
+              </span>
+              {selectedChats.size > 0 && (
+                <button
+                  onClick={handleDeleteMultipleChats}
+                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                  title="Delete selected chats"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+              <button
+                onClick={selectAllChats}
+                className="text-xs text-blue-500 hover:text-blue-700"
+              >
+                Select All
+              </button>
+              <button
+                onClick={clearSelection}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -90,10 +254,25 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           filteredChats.map((chat) => (
             <div
               key={chat.id}
-              className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+              className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors relative ${
                 selectedChat?.id === chat.id ? 'bg-blue-50 border-r-4 border-blue-500' : ''
+              } ${
+                selectedChats.has(chat.id) ? 'bg-blue-100' : ''
               }`}
+              onContextMenu={(e) => handleRightClick(e, chat.id)}
             >
+              {/* Multi-Select Checkbox */}
+              {isMultiSelectMode && (
+                <div className="mr-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedChats.has(chat.id)}
+                    onChange={() => toggleChatSelection(chat.id)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
               <div 
                 className="relative cursor-pointer"
                 onClick={() => handleProfileClick(chat.other_user)}
@@ -116,7 +295,13 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
 
               <div 
                 className="ml-3 flex-1 min-w-0"
-                onClick={() => onChatSelect(chat)}
+                onClick={() => {
+                  if (isMultiSelectMode) {
+                    toggleChatSelection(chat.id);
+                  } else {
+                    onChatSelect(chat);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
@@ -244,6 +429,71 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
                 className="w-full px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu.show && (
+        <div 
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              console.log('Context menu delete clicked, chatId:', contextMenu.chatId);
+              handleDeleteSingleChat(contextMenu.chatId);
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+          >
+            <Trash2 size={16} className="mr-2" />
+            Delete Chat
+          </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-96 p-6">
+            <div className="flex items-center mb-4">
+              <Trash2 className="text-red-500 mr-3" size={24} />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete Chat{deleteTarget === 'multiple' && selectedChats.size > 1 ? 's' : ''}
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              {deleteTarget === 'single' 
+                ? 'Are you sure you want to delete this chat? This will permanently remove all messages and cannot be undone.'
+                : `Are you sure you want to delete ${selectedChats.size} chat${selectedChats.size > 1 ? 's' : ''}? This will permanently remove all messages and cannot be undone.`
+              }
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                disabled={deletingChats}
+                className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deletingChats}
+                className="px-4 py-2 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center"
+              >
+                {deletingChats ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </button>
             </div>
           </div>
