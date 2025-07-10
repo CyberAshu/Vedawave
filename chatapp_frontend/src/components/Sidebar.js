@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { MessageCircle, Users, User } from 'lucide-react';
 import Friends from './Friends';
 import Badge from './Badge';
+import ProfileModal from './ProfileModal';
 
-const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentUser, onProfileClick }) => {
+const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentUser, onProfileClick, onStartChat }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [activeTab, setActiveTab] = useState('chats'); // chats or friends
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const filteredChats = (chats || []).filter(chat =>
     chat.other_user && chat.other_user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -32,6 +35,31 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
       setActiveTab('chats'); // Switch to chats tab after starting a chat
     } catch (error) {
       console.error('Error starting chat:', error);
+    }
+  };
+
+  const handleProfileClick = (user) => {
+    setSelectedUser(user);
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false);
+    setSelectedUser(null);
+  };
+
+  const handleMessageFromProfile = (user) => {
+    setShowProfileModal(false);
+    handleStartChat(user.id);
+  };
+
+  const handleViewProfile = (user) => {
+    setShowProfileModal(false);
+    if (user.id === currentUser.id) {
+      onProfileClick(); // Open settings for current user
+    } else {
+      // For other users, you might want to implement a detailed profile view
+      console.log('View profile for:', user.name);
     }
   };
 
@@ -62,12 +90,14 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           filteredChats.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => onChatSelect(chat)}
               className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
                 selectedChat?.id === chat.id ? 'bg-blue-50 border-r-4 border-blue-500' : ''
               }`}
             >
-              <div className="relative">
+              <div 
+                className="relative cursor-pointer"
+                onClick={() => handleProfileClick(chat.other_user)}
+              >
                 {chat.other_user.avatar ? (
                   <img
                     src={chat.other_user.avatar}
@@ -84,7 +114,10 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
                 )}
               </div>
 
-              <div className="ml-3 flex-1 min-w-0">
+              <div 
+                className="ml-3 flex-1 min-w-0"
+                onClick={() => onChatSelect(chat)}
+              >
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
                     {chat.other_user.name}
@@ -164,7 +197,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
       {/* Tab Content */}
       {activeTab === 'chats' && renderChatsTab()}
       {activeTab === 'friends' && (
-        <Friends onStartChat={handleStartChat} />
+        <Friends onStartChat={handleStartChat} onProfileClick={handleProfileClick} />
       )}
 
       {/* New Chat Modal */}
@@ -215,6 +248,17 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
             </div>
           </div>
         </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <ProfileModal
+          user={selectedUser}
+          currentUser={currentUser}
+          onClose={handleCloseProfileModal}
+          onMessageClick={handleMessageFromProfile}
+          onViewProfile={handleViewProfile}
+        />
       )}
     </div>
   );

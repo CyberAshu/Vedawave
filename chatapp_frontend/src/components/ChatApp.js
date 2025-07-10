@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import chatService from '../services/chatService';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
-import Settings from './Settings';
+import ProfileSettings from './ProfileSettings';
 
 const ChatApp = () => {
   const { user, token, logout } = useAuth();
@@ -146,7 +146,7 @@ const ChatApp = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {showSettings ? (
-          <Settings
+          <ProfileSettings
             currentUser={user}
             onLogout={logout}
             onBackClick={handleBackFromSettings}

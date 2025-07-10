@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Edit3, Save, X, Camera, LogOut, User } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Edit3, Save, X, Camera, LogOut, User, Shield, Mail, Calendar, Activity, MapPin, Phone, Link, Github, Twitter, Linkedin, Globe, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import userService from '../services/userService';
 
 const Settings = ({ currentUser, onLogout, onBackClick }) => {
   const { token } = useAuth();
@@ -11,7 +12,8 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
   const [editedProfile, setEditedProfile] = useState({
     name: currentUser.name,
     email: currentUser.email,
-    avatar: currentUser.avatar || ''
+    avatar: currentUser.avatar || '',
+    statusMessage: currentUser.status_message || ''
   });
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,36 +37,51 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
       const updateData = {
         name: editedProfile.name,
         email: editedProfile.email,
-        avatar: editedProfile.avatar
+        avatar: editedProfile.avatar,
+        status_message: editedProfile.statusMessage
       };
       
-      // Call API to update profile - you'll need to implement this
-      console.log('Profile update:', updateData);
+      // Call API to update profile using userService
+      const updatedUser = await userService.updateProfile(token, updateData);
+      console.log('Profile updated successfully:', updatedUser);
       
       setIsEditing(false);
       setAvatarPreview(null);
       
-      // You might want to refresh the current user data in your context here
-      // For now, we'll just show a success message
-      console.log('Profile updated successfully');
+      // Refresh the page to reflect changes (you might want to update the context instead)
+      window.location.reload();
       
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to update profile. Please try again.');
+      setError(error.message || 'Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Show preview immediately
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatarPreview(e.target.result);
-        setEditedProfile({ ...editedProfile, avatar: e.target.result });
       };
       reader.readAsDataURL(file);
+      
+      // Upload the file and get the URL
+      try {
+        setLoading(true);
+        const updatedUser = await userService.uploadAvatar(token, file);
+        setEditedProfile({ ...editedProfile, avatar: updatedUser.avatar });
+        console.log('Avatar uploaded successfully');
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        setError('Failed to upload avatar. Please try again.');
+        setAvatarPreview(null); // Reset preview on error
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -73,7 +90,8 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
     setEditedProfile({
       name: currentUser.name,
       email: currentUser.email,
-      avatar: currentUser.avatar || ''
+      avatar: currentUser.avatar || '',
+      statusMessage: currentUser.status_message || ''
     });
     setAvatarPreview(null);
   };
@@ -123,7 +141,7 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
         
         <div className="flex-1">
           {isEditing ? (
-            <div className="space-y-3">
+              <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input
@@ -139,6 +157,16 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
                   type="email"
                   value={editedProfile.email}
                   onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <input
+                  type="text"
+                  value={editedProfile.statusMessage}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, statusMessage: e.target.value })}
+                  placeholder="Update your status message"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -194,12 +222,14 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600">Member Since</div>
             <div className="text-lg font-semibold text-gray-800">
-              {new Date().toLocaleDateString()}
+              {currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'Recently'}
             </div>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm text-gray-600">Account Status</div>
-            <div className="text-lg font-semibold text-green-600">Active</div>
+            <div className="text-sm text-gray-600">Custom Status</div>
+            <div className="text-lg font-semibold text-gray-800">
+              {currentUser.status_message || 'No status set'}
+            </div>
           </div>
         </div>
       </div>

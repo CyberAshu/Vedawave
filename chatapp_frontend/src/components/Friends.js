@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Users, Search, Check, X, MessageCircle } from 'lucide-react';
 
-const Friends = ({ onStartChat }) => {
+const Friends = ({ onStartChat, onProfileClick }) => {
   const [activeTab, setActiveTab] = useState('friends'); // friends, search, requests
   const [friends, setFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -139,7 +139,10 @@ const Friends = ({ onStartChat }) => {
           return (
             <div key={friendship.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
               <div className="flex items-center flex-1 min-w-0">
-                <div className="relative flex-shrink-0">
+                <div 
+                  className="relative flex-shrink-0 cursor-pointer"
+                  onClick={() => onProfileClick && onProfileClick(friendship.friend)}
+                >
                   {friendship.friend.avatar ? (
                     <img
                       src={friendship.friend.avatar}
@@ -211,7 +214,10 @@ const Friends = ({ onStartChat }) => {
           return (
             <div key={user.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
               <div className="flex items-center flex-1 min-w-0">
-                <div className="flex-shrink-0">
+                <div 
+                  className="flex-shrink-0 cursor-pointer"
+                  onClick={() => onProfileClick && onProfileClick(user)}
+                >
                   {user.avatar ? (
                     <img
                       src={user.avatar}
@@ -282,7 +288,10 @@ const Friends = ({ onStartChat }) => {
                 return (
                   <div key={request.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
                     <div className="flex items-center flex-1 min-w-0">
-                      <div className="flex-shrink-0">
+                      <div 
+                        className="flex-shrink-0 cursor-pointer"
+                        onClick={() => onProfileClick && onProfileClick(request.sender)}
+                      >
                         {request.sender.avatar ? (
                           <img
                             src={request.sender.avatar}
@@ -335,7 +344,10 @@ const Friends = ({ onStartChat }) => {
                 return (
                   <div key={request.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
                     <div className="flex items-center flex-1 min-w-0">
-                      <div className="flex-shrink-0">
+                      <div 
+                        className="flex-shrink-0 cursor-pointer"
+                        onClick={() => onProfileClick && onProfileClick(request.receiver)}
+                      >
                         {request.receiver.avatar ? (
                           <img
                             src={request.receiver.avatar}
