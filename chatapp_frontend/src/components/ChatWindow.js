@@ -594,9 +594,13 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
           <div className="text-sm text-gray-500">
             {Object.entries(typingUsers[chat.id])
               .filter(([, isTyping]) => isTyping)
-              .map(([userId]) => (
-                <span key={userId}>{userId} is typing...</span>
-              ))}
+              .map(([userId]) => {
+                // Show the other user's name since they're typing
+                const userName = userId === String(chat.other_user.id) ? chat.other_user.name : 'Someone';
+                return (
+                  <span key={userId}>{userName} is typing...</span>
+                );
+              })}
           </div>
         )}
       </div>
