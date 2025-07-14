@@ -194,7 +194,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
             placeholder="Search chats..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-100 border-none rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         
@@ -205,39 +205,39 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
             className={`px-3 py-1 text-xs rounded-full transition-colors ${
               isMultiSelectMode 
                 ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             {isMultiSelectMode ? 'Exit Select' : 'Select Multiple'}
           </button>
           
           {isMultiSelectMode && (
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">
-                {selectedChats.size} selected
-              </span>
-              {selectedChats.size > 0 && (
-                <button
-                  onClick={handleDeleteMultipleChats}
-                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                  title="Delete selected chats"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {selectedChats.size} selected
+            </span>
+            {selectedChats.size > 0 && (
               <button
-                onClick={selectAllChats}
-                className="text-xs text-blue-500 hover:text-blue-700"
+                onClick={handleDeleteMultipleChats}
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                title="Delete selected chats"
               >
-                Select All
+                <Trash2 size={14} />
               </button>
-              <button
-                onClick={clearSelection}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                Clear
-              </button>
-            </div>
+            )}
+            <button
+              onClick={selectAllChats}
+              className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Select All
+            </button>
+            <button
+              onClick={clearSelection}
+              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            >
+              Clear
+            </button>
+          </div>
           )}
         </div>
       </div>
@@ -245,7 +245,7 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {filteredChats.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <MessageCircle className="mx-auto mb-2" size={40} />
             <p>No chats yet</p>
             <p className="text-sm">Add friends to start chatting!</p>
@@ -254,10 +254,10 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           filteredChats.map((chat) => (
             <div
               key={chat.id}
-              className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors relative ${
-                selectedChat?.id === chat.id ? 'bg-blue-50 border-r-4 border-blue-500' : ''
+              className={`flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors relative ${
+                selectedChat?.id === chat.id ? 'bg-blue-50 dark:bg-blue-900/20 border-r-4 border-blue-500' : ''
               } ${
-                selectedChats.has(chat.id) ? 'bg-blue-100' : ''
+                selectedChats.has(chat.id) ? 'bg-blue-100 dark:bg-blue-800/30' : ''
               }`}
               onContextMenu={(e) => handleRightClick(e, chat.id)}
             >
@@ -304,18 +304,18 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
                 }}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                     {chat.other_user.name}
                   </h3>
                   {chat.last_message && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {new Date(chat.last_message.created_at + 'Z').toLocaleTimeString()}
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 truncate">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                     {chat.last_message ? (
                       chat.last_message.message_type === 'text'
                         ? chat.last_message.content
@@ -340,13 +340,13 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
   );
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">VedaWave</h1>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">VedaWave</h1>
         <button
           onClick={onProfileClick}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
           title="Profile Settings"
         >
           <User size={20} />
@@ -354,13 +354,13 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('chats')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'chats'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
           <MessageCircle className="inline mr-2" size={16} />
@@ -370,8 +370,8 @@ const Sidebar = ({ chats, selectedChat, onChatSelect, onNewChat, users, currentU
           onClick={() => setActiveTab('friends')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'friends'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
           <Users className="inline mr-2" size={16} />

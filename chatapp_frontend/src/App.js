@@ -4,6 +4,7 @@ import ChatApp from './components/ChatApp';
 import Login from './components/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
+import { ThemeProvider } from './context/ThemeContext';
 import notificationService from './services/notificationService';
 
 function AppContent() {
@@ -30,14 +31,14 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-xl text-gray-600 dark:text-gray-300">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {user ? (
         <SocketProvider>
           <ChatApp />
@@ -51,9 +52,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

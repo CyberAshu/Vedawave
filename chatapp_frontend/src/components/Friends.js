@@ -122,14 +122,14 @@ const Friends = ({ onStartChat, onProfileClick }) => {
 
   const renderFriendsList = () => (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
         <Users className="mr-2" size={20} />
         My Friends ({friends.length})
       </h3>
       {loading ? (
-        <div className="text-center py-8">Loading friends...</div>
+        <div className="text-center py-8 text-gray-900 dark:text-gray-100">Loading friends...</div>
       ) : friends.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Users className="mx-auto mb-2" size={40} />
           <p>No friends yet. Start by searching and adding friends!</p>
         </div>
@@ -137,7 +137,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
         friends.map(friendship => {
           const avatarColor = getAvatarColor(friendship.friend.name);
           return (
-            <div key={friendship.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
+            <div key={friendship.id} className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all duration-200">
               <div className="flex items-center flex-1 min-w-0">
                 <div 
                   className="relative flex-shrink-0 cursor-pointer"
@@ -159,10 +159,10 @@ const Friends = ({ onStartChat, onProfileClick }) => {
                   )}
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate">{friendship.friend.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{friendship.friend.email}</p>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 truncate">{friendship.friend.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{friendship.friend.email}</p>
                   {friendship.friend.is_active && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 mt-1">
                       <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
                       Online
                     </span>
@@ -171,7 +171,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
               </div>
               <button
                 onClick={() => onStartChat && onStartChat(friendship.friend.id)}
-                className="ml-3 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center text-sm flex-shrink-0"
+                className="ml-3 px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors flex items-center text-sm flex-shrink-0"
               >
                 <MessageCircle size={14} className="mr-1" />
                 Chat
@@ -185,26 +185,26 @@ const Friends = ({ onStartChat, onProfileClick }) => {
 
   const renderSearchUsers = () => (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
         <Search className="mr-2" size={20} />
         Find Friends
       </h3>
       
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
         <input
           type="text"
           placeholder="Search users by name or email..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
         />
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Searching...</div>
+        <div className="text-center py-8 text-gray-900 dark:text-gray-100">Searching...</div>
       ) : searchResults.length === 0 && searchQuery ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Search className="mx-auto mb-2" size={40} />
           <p>No users found matching "{searchQuery}"</p>
         </div>
@@ -212,7 +212,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
         searchResults.map(user => {
           const avatarColor = getAvatarColor(user.name);
           return (
-            <div key={user.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
+            <div key={user.id} className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
               <div className="flex items-center flex-1 min-w-0">
                 <div 
                   className="flex-shrink-0 cursor-pointer"
@@ -231,10 +231,10 @@ const Friends = ({ onStartChat, onProfileClick }) => {
                   )}
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate">{user.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 truncate">{user.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                   {user.is_active && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 mt-1">
                       <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
                       Online
                     </span>
@@ -243,7 +243,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
               </div>
               <button
                 onClick={() => sendFriendRequest(user.id)}
-                className="ml-3 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center text-sm flex-shrink-0"
+                className="ml-3 px-3 py-1.5 bg-green-500 dark:bg-green-600 text-white rounded-md hover:bg-green-600 dark:hover:bg-green-700 transition-colors flex items-center text-sm flex-shrink-0"
               >
                 <UserPlus size={14} className="mr-1" />
                 Add
@@ -274,19 +274,19 @@ const Friends = ({ onStartChat, onProfileClick }) => {
 
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Friend Requests</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Friend Requests</h3>
         
         {/* Received Requests */}
         <div>
-          <h4 className="font-medium text-gray-700 mb-3">Received ({receivedRequests.length})</h4>
+          <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Received ({receivedRequests.length})</h4>
           {receivedRequests.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No pending friend requests</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No pending friend requests</p>
           ) : (
             <div className="space-y-3">
               {receivedRequests.map(request => {
                 const avatarColor = getAvatarColor(request.sender.name);
                 return (
-                  <div key={request.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
+                  <div key={request.id} className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
                     <div className="flex items-center flex-1 min-w-0">
                       <div 
                         className="flex-shrink-0 cursor-pointer"
@@ -305,21 +305,21 @@ const Friends = ({ onStartChat, onProfileClick }) => {
                         )}
                       </div>
                       <div className="ml-3 flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{request.sender.name}</p>
-                        <p className="text-sm text-gray-500 truncate">{request.sender.email}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200 truncate">{request.sender.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{request.sender.email}</p>
                       </div>
                     </div>
                     <div className="ml-3 flex space-x-2 flex-shrink-0">
                       <button
                         onClick={() => handleFriendRequest(request.id, 'accepted')}
-                        className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors flex items-center text-xs"
+                        className="px-2 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 transition-colors flex items-center text-xs"
                       >
                         <Check size={12} className="mr-1" />
                         Accept
                       </button>
                       <button
                         onClick={() => handleFriendRequest(request.id, 'rejected')}
-                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors flex items-center text-xs"
+                        className="px-2 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 transition-colors flex items-center text-xs"
                       >
                         <X size={12} className="mr-1" />
                         Reject
@@ -334,15 +334,15 @@ const Friends = ({ onStartChat, onProfileClick }) => {
 
         {/* Sent Requests */}
         <div>
-          <h4 className="font-medium text-gray-700 mb-3">Sent ({sentRequests.length})</h4>
+          <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Sent ({sentRequests.length})</h4>
           {sentRequests.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No pending sent requests</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No pending sent requests</p>
           ) : (
             <div className="space-y-3">
               {sentRequests.map(request => {
                 const avatarColor = getAvatarColor(request.receiver.name);
                 return (
-                  <div key={request.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm border">
+                  <div key={request.id} className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
                     <div className="flex items-center flex-1 min-w-0">
                       <div 
                         className="flex-shrink-0 cursor-pointer"
@@ -361,11 +361,11 @@ const Friends = ({ onStartChat, onProfileClick }) => {
                         )}
                       </div>
                       <div className="ml-3 flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{request.receiver.name}</p>
-                        <p className="text-sm text-gray-500 truncate">{request.receiver.email}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200 truncate">{request.receiver.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{request.receiver.email}</p>
                       </div>
                     </div>
-                    <span className="ml-3 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs flex-shrink-0">
+                    <span className="ml-3 px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-xs flex-shrink-0">
                       Pending
                     </span>
                   </div>
@@ -379,16 +379,16 @@ const Friends = ({ onStartChat, onProfileClick }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header with tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="flex bg-gray-50">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex bg-gray-50 dark:bg-gray-800">
           <button
             onClick={() => setActiveTab('friends')}
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 flex items-center justify-center ${
               activeTab === 'friends'
-                ? 'border-blue-500 text-blue-600 bg-white shadow-sm'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 shadow-sm'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
             <Users className="mr-2" size={16} />
@@ -398,8 +398,8 @@ const Friends = ({ onStartChat, onProfileClick }) => {
             onClick={() => setActiveTab('search')}
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 flex items-center justify-center ${
               activeTab === 'search'
-                ? 'border-blue-500 text-blue-600 bg-white shadow-sm'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 shadow-sm'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
             <Search className="mr-2" size={16} />
@@ -409,8 +409,8 @@ const Friends = ({ onStartChat, onProfileClick }) => {
             onClick={() => setActiveTab('requests')}
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 flex items-center justify-center relative ${
               activeTab === 'requests'
-                ? 'border-blue-500 text-blue-600 bg-white shadow-sm'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 shadow-sm'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
             <UserPlus className="mr-2" size={16} />
@@ -433,7 +433,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
 
       {/* Error and Success messages */}
       {error && (
-        <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center">
+        <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 rounded-lg flex items-center">
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
@@ -442,7 +442,7 @@ const Friends = ({ onStartChat, onProfileClick }) => {
       )}
       
       {successMessage && (
-        <div className="mx-4 mt-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center">
+        <div className="mx-4 mt-4 p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-200 rounded-lg flex items-center">
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>

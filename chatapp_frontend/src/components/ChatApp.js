@@ -165,14 +165,14 @@ const ChatApp = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-100 items-center justify-center">
-        <div className="text-xl text-gray-600">Loading chats...</div>
+      <div className="flex h-screen bg-gray-100 dark:bg-gray-900 items-center justify-center">
+        <div className="text-xl text-gray-600 dark:text-gray-400">Loading chats...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {/* Notification Banner */}
       <NotificationBanner />
       
@@ -222,11 +222,11 @@ const ChatApp = () => {
         ) : (
           <div className="flex-1 flex flex-col">
             {/* Mobile Header */}
-            <div className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-              <h1 className="text-lg font-semibold text-gray-800">VedaWave</h1>
+            <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+              <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">VedaWave</h1>
               <button
                 onClick={() => setShowSidebar(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -235,18 +235,18 @@ const ChatApp = () => {
             </div>
             
             {/* Welcome Screen */}
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
               <div className="text-center px-4">
-                <div className="text-6xl text-gray-300 mb-4">💬</div>
-                <h2 className="text-2xl font-semibold text-gray-600 mb-2">
+                <div className="text-6xl text-gray-300 dark:text-gray-600 mb-4">💬</div>
+                <h2 className="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
                   Welcome to VedaWave
                 </h2>
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   {window.innerWidth < 768 ? 'Tap the menu to start chatting' : 'Select a chat to start messaging'}
                 </p>
                 <button
                   onClick={() => setShowSidebar(true)}
-                  className="md:hidden bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  className="md:hidden bg-blue-500 dark:bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                 >
                   Open Chats
                 </button>

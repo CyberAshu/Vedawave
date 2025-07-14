@@ -123,9 +123,9 @@ const MessageInput = ({ onSendMessage, chatId }) => {
     <div className="space-y-2">
       {/* Attachments Preview */}
       {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-lg">
+        <div className="flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
           {attachments.map((attachment, index) => (
-            <div key={index} className="relative bg-white p-2 rounded border">
+            <div key={index} className="relative bg-white dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600">
               {attachment.file_type && attachment.file_type.startsWith('image/') ? (
                 <div className="space-y-2">
                   <img 
@@ -133,7 +133,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
                     alt={attachment.filename}
                     className="w-16 h-16 object-cover rounded"
                   />
-                  <div className="text-xs text-gray-600 truncate max-w-16">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-16">
                     {attachment.filename}
                   </div>
                 </div>
@@ -142,14 +142,14 @@ const MessageInput = ({ onSendMessage, chatId }) => {
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span className="text-sm text-gray-600 truncate max-w-32">
+                  <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-32">
                     {attachment.filename}
                   </span>
                 </div>
               )}
               <button
                 onClick={() => removeAttachment(index)}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 flex items-center justify-center"
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 dark:bg-red-600 text-white rounded-full text-xs hover:bg-red-600 dark:hover:bg-red-700 flex items-center justify-center"
               >
                 ×
               </button>
@@ -163,7 +163,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 hover:border-blue-300"
+          className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500"
           title="Attach file"
           style={{ height: '46px', width: '46px', alignSelf: 'flex-end' }}
         >
@@ -194,7 +194,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
                 }
               }}
               placeholder="Type your message here..."
-              className={`w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 block ${
+              className={`w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 resize-none transition-all duration-200 block ${
                 isOverLimit ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''
               }`}
               rows={1}
@@ -216,7 +216,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
             {isOverLimit && (
               <div className="absolute bottom-1 left-0 right-0 px-4 pb-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-red-600">
+                  <span className="font-medium text-red-600 dark:text-red-400">
                     {characterCount}/{CHARACTER_LIMIT} characters - Limit exceeded
                   </span>
                 </div>
@@ -225,7 +225,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
             
             {/* Character count indicator for messages nearing limit */}
             {!isOverLimit && characterCount > CHARACTER_LIMIT * 0.8 && (
-              <div className="absolute bottom-1 right-4 text-xs text-gray-500">
+              <div className="absolute bottom-1 right-4 text-xs text-gray-500 dark:text-gray-400">
                 {characterCount}/{CHARACTER_LIMIT}
               </div>
             )}
@@ -236,7 +236,7 @@ const MessageInput = ({ onSendMessage, chatId }) => {
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 hover:border-blue-300"
+            className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 flex-shrink-0 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500"
             title="Add emoji"
             style={{ height: '46px', width: '46px' }}
           >
@@ -257,8 +257,8 @@ const MessageInput = ({ onSendMessage, chatId }) => {
           disabled={(!message.trim() && attachments.length === 0) || isOverLimit}
           className={`rounded-lg transition-all duration-200 flex-shrink-0 flex items-center justify-center ${
             (message.trim() || attachments.length > 0) && !isOverLimit
-              ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              ? 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 shadow-md hover:shadow-lg'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
           }`}
           title={isOverLimit ? 'Character limit exceeded' : 'Send message'}
           style={{ height: '46px', width: '46px', alignSelf: 'flex-end' }}

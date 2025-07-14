@@ -430,13 +430,13 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="flex items-center p-4 border-b border-gray-200">
+      <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
         {/* Mobile Back Button */}
         <button
           onClick={onBackClick}
-          className="md:hidden mr-3 p-2 hover:bg-gray-100 rounded-lg"
+          className="md:hidden mr-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -452,8 +452,8 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
               className="w-10 h-10 rounded-full"
             />
           ) : (
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-600 font-medium">
+            <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+              <span className="text-gray-600 dark:text-gray-300 font-medium">
                 {chat.other_user.name.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -461,10 +461,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
         </div>
         
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             {chat.other_user.name}
           </h2>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {chat.other_user.is_active ? 'Online' : 'Offline'}
           </span>
         </div>
@@ -472,7 +472,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
         {/* Mobile Menu Button */}
         <button
           onClick={onShowSidebar}
-          className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+          className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -482,17 +482,17 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
 
       {/* Reply Preview */}
       {replyToMessage && (
-        <div className="px-4 py-2 bg-gray-100 border-b border-gray-200">
+        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="text-sm text-gray-600">Replying to:</div>
-              <div className="text-sm font-medium text-gray-800 truncate">
+              <div className="text-sm text-gray-600 dark:text-gray-300">Replying to:</div>
+              <div className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
                 {replyToMessage.content}
               </div>
             </div>
             <button
               onClick={handleCancelReply}
-              className="ml-2 p-1 hover:bg-gray-200 rounded"
+              className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -509,7 +509,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
         style={{ scrollBehavior: 'smooth' }}
       >
         {loading ? (
-          <p className="text-gray-600">Loading messages...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading messages...</p>
         ) : (
           <>
             {/* Load More Button */}
@@ -517,7 +517,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
               <div className="flex justify-center py-4">
                 <button
                   onClick={loadOlderMessages}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2"
+                  className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -530,8 +530,8 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
             {/* Loading indicator for older messages */}
             {loadingOlder && (
               <div className="flex justify-center py-4">
-                <div className="flex items-center space-x-2 text-gray-500">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 dark:border-blue-400"></div>
                   <span className="text-sm">Loading older messages...</span>
                 </div>
               </div>
@@ -540,14 +540,14 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
             {/* No more messages indicator */}
             {!hasMoreMessages && chatMessages.length > MESSAGES_LIMIT && (
               <div className="flex justify-center py-2">
-                <span className="text-xs text-gray-400">Beginning of conversation</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">Beginning of conversation</span>
               </div>
             )}
             
             {groupedMessages.map(([date, messages]) => (
               <div key={date}>
-              <div className="text-center text-gray-500 text-sm font-medium mb-3 mt-2">
-                <span className="bg-gray-100 px-3 py-1 rounded-full">
+              <div className="text-center text-gray-500 dark:text-gray-400 text-sm font-medium mb-3 mt-2">
+                <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
                   {date === new Date().toDateString() ? 'Today' : 
                    date === new Date(Date.now() - 86400000).toDateString() ? 'Yesterday' : 
                    new Date(date).toLocaleDateString('en-US', { 
@@ -580,14 +580,14 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 <div
   className={`flex flex-col space-y-1 ${
     message.sender_id === actualCurrentUser.id
-      ? 'bg-blue-500 text-white'
-      : 'bg-gray-200 text-gray-800'
+      ? 'bg-blue-500 dark:bg-blue-600 text-white'
+      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
   } p-2 rounded-lg relative`}
 >
 
                   <div>
                     {message.is_deleted ? (
-                      <em className="text-gray-600 italic opacity-75 bg-gray-100 px-2 py-1 rounded border border-gray-300">
+                      <em className="text-gray-600 dark:text-gray-300 italic opacity-75 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
                         This message was deleted
                       </em>
                     ) : editingMessageId === message.id ? (
@@ -595,7 +595,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                         <textarea
                           value={editContent}
                           onChange={(e) => setEditContent(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white min-h-[60px]"
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 min-h-[60px]"
                           rows={2}
                           autoFocus
                           style={{
@@ -608,13 +608,13 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                         <div className="flex space-x-2">
                           <button
                             onClick={handleSaveEdit}
-                            className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                            className="px-3 py-1 bg-blue-500 dark:bg-blue-600 text-white text-sm rounded hover:bg-blue-600 dark:hover:bg-blue-700"
                           >
                             Save
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                            className="px-3 py-1 bg-gray-500 dark:bg-gray-600 text-white text-sm rounded hover:bg-gray-600 dark:hover:bg-gray-700"
                           >
                             Cancel
                           </button>
@@ -654,8 +654,8 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                     />
                                     <div className={`text-xs mt-1 px-2 py-1 rounded ${
                                       message.sender_id === actualCurrentUser.id
-                                        ? 'bg-blue-600 text-blue-100'
-                                        : 'bg-gray-100 text-gray-700'
+                                        ? 'bg-blue-600 dark:bg-blue-700 text-blue-100'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                     }`}>
                                       {attachment.filename}
                                     </div>
@@ -663,13 +663,13 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                 ) : (
                                   <div className={`file-attachment p-2 rounded border flex items-center space-x-2 ${
                                     message.sender_id === actualCurrentUser.id
-                                      ? 'bg-blue-400 border-blue-400 text-white'
-                                      : 'bg-gray-100 border-gray-300 text-gray-800'
+                                      ? 'bg-blue-400 dark:bg-blue-500 border-blue-400 dark:border-blue-500 text-white'
+                                      : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100'
                                   }`}>
                                     <svg className={`w-5 h-5 ${
                                       message.sender_id === actualCurrentUser.id
                                         ? 'text-blue-200'
-                                        : 'text-gray-500'
+                                        : 'text-gray-500 dark:text-gray-400'
                                     }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -678,7 +678,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                       <div className={`text-xs ${
                                         message.sender_id === actualCurrentUser.id
                                           ? 'text-blue-200'
-                                          : 'text-gray-500'
+                                          : 'text-gray-500 dark:text-gray-400'
                                       }`}>
                                         {attachment.file_size ? `${Math.round(attachment.file_size / 1024)} KB` : 'Unknown size'}
                                       </div>
@@ -689,7 +689,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                                       className={`text-sm underline ${
                                         message.sender_id === actualCurrentUser.id
                                           ? 'text-blue-200 hover:text-white'
-                                          : 'text-blue-500 hover:text-blue-700'
+                                          : 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300'
                                       }`}
                                     >
                                       Download
@@ -727,9 +727,9 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                         <button
                           key={index}
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs cursor-pointer transition-all duration-200 border ${
-                            hasUserReacted
-                              ? 'bg-blue-100 border-blue-300 text-blue-800 shadow-sm'
-                              : 'bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700 hover:shadow-sm'
+                              hasUserReacted
+                                ? 'bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200 shadow-sm'
+                                : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-sm'
                           }`}
                           title={`${reaction.users.map(userId => userId === actualCurrentUser.id ? 'You' : `User ${userId}`).join(', ')} reacted`}
                           onClick={() => handleEmojiReaction(message.id, reaction.emoji)}
@@ -744,33 +744,33 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 
                 {/* Horizontal Reaction Bar */}
                 {hoveredMessage === message.id && !message.is_deleted && (
-                  <div className={`absolute -top-6 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white border border-gray-200 rounded-full shadow-lg px-2 py-1 z-10`}>
+                  <div className={`absolute -top-6 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full shadow-lg px-2 py-1 z-10`}>
                     <div className="flex items-center space-x-1">
                       {/* Quick Reaction Emojis */}
                       <button
                         onClick={() => handleEmojiReaction(message.id, '👍')}
-                        className="p-1 hover:bg-gray-100 rounded-full text-sm transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-sm transition-colors"
                         title="Like"
                       >
                         👍
                       </button>
                       <button
                         onClick={() => handleEmojiReaction(message.id, '❤️')}
-                        className="p-1 hover:bg-gray-100 rounded-full text-sm transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-sm transition-colors"
                         title="Love"
                       >
                         ❤️
                       </button>
                       <button
                         onClick={() => handleEmojiReaction(message.id, '😂')}
-                        className="p-1 hover:bg-gray-100 rounded-full text-sm transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-sm transition-colors"
                         title="Laugh"
                       >
                         😂
                       </button>
                       <button
                         onClick={() => handleEmojiReaction(message.id, '😮')}
-                        className="p-1 hover:bg-gray-100 rounded-full text-sm transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-sm transition-colors"
                         title="Surprised"
                       >
                         😮
@@ -779,22 +779,22 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                       {/* More Emojis Button */}
                       <button
                         onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
-                        className="p-1 hover:bg-gray-100 rounded-full text-sm transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-sm transition-colors"
                         title="More reactions"
                       >
                         ➕
                       </button>
                       
                       {/* Separator */}
-                      <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                       
                       {/* Reply Button */}
                       <button
                         onClick={() => handleReplyToMessage(message)}
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                         title="Reply"
                       >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                       </button>
@@ -803,10 +803,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                       {message.sender_id === actualCurrentUser.id && (
                         <button
                           onClick={() => setOpenMenuId(openMenuId === message.id ? null : message.id)}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                           title="More options"
                         >
-                          <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                           </svg>
                         </button>
@@ -817,11 +817,11 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 
                 {/* Dropdown menu for more options */}
                 {openMenuId === message.id && (
-                  <div className={`absolute top-8 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-50 min-w-[140px]`}>
+                  <div className={`absolute top-8 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl py-1 z-50 min-w-[140px]`}>
                     {/* Reply option for all messages */}
                     <button
                       onClick={() => handleReplyToMessage(message)}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -834,7 +834,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                       <>
                         <button 
                           onClick={() => handleEditMessage(message.id)} 
-                          className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center"
+                          className="w-full px-3 py-2 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -847,7 +847,7 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                             handleDeleteMessage(message.id);
                             setOpenMenuId(null);
                           }} 
-                          className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center border-t border-gray-100"
+                          className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center border-t border-gray-100 dark:border-gray-700"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -861,12 +861,12 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
                 
                 {/* Extended Emoji Picker */}
                 {showEmojiPicker === message.id && (
-                  <div className={`absolute top-0 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-30 flex flex-wrap gap-1 max-w-xs`}>
+                  <div className={`absolute top-0 ${message.sender_id === actualCurrentUser.id ? 'right-0' : 'left-0'} bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-2 z-30 flex flex-wrap gap-1 max-w-xs`}>
                     {commonEmojis.map((emoji, index) => (
                       <button
                         key={index}
                         onClick={() => handleEmojiReaction(message.id, emoji)}
-                        className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-lg transition-colors"
                       >
                         {emoji}
                       </button>
@@ -885,10 +885,10 @@ const ChatWindow = ({ chat, currentUser, token, onShowSidebar, onBackClick }) =>
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <MessageInput onSendMessage={handleSendMessage} chatId={chat.id} />
         {typingUsers[chat.id] && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             {Object.entries(typingUsers[chat.id])
               .filter(([, isTyping]) => isTyping)
               .map(([userId]) => {

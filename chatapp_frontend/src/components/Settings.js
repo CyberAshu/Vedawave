@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Edit3, Save, X, Camera, LogOut, User, Shield, Mail, Calendar, Activity, MapPin, Phone, Link, Github, Twitter, Linkedin, Globe, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import userService from '../services/userService';
 
 const Settings = ({ currentUser, onLogout, onBackClick }) => {
   const { token } = useAuth();
   const { connected } = useSocket();
+  const { theme, setTheme, isDark, isSystem, actualTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
@@ -100,7 +102,7 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
     <div className="space-y-6">
       {/* Profile Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">Profile Information</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Profile Information</h3>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
@@ -143,41 +145,41 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
           {isEditing ? (
               <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                 <input
                   type="text"
                   value={editedProfile.name}
                   onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                 <input
                   type="email"
                   value={editedProfile.email}
                   onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                 <input
                   type="text"
                   value={editedProfile.statusMessage}
                   onChange={(e) => setEditedProfile({ ...editedProfile, statusMessage: e.target.value })}
                   placeholder="Update your status message"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <h4 className="text-xl font-semibold text-gray-800">{currentUser.name}</h4>
-              <p className="text-gray-600">{currentUser.email}</p>
+              <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{currentUser.name}</h4>
+              <p className="text-gray-600 dark:text-gray-400">{currentUser.email}</p>
               <div className="flex items-center space-x-2">
                 <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Status: {connected ? 'Online' : 'Offline'}
                 </p>
               </div>
@@ -216,18 +218,18 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
       )}
 
       {/* Profile Stats */}
-      <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-gray-800 mb-4">Account Information</h4>
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">Account Information</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm text-gray-600">Member Since</div>
-            <div className="text-lg font-semibold text-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="text-sm text-gray-600 dark:text-gray-400">Member Since</div>
+            <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
               {currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'Recently'}
             </div>
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm text-gray-600">Custom Status</div>
-            <div className="text-lg font-semibold text-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="text-sm text-gray-600 dark:text-gray-400">Custom Status</div>
+            <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
               {currentUser.status_message || 'No status set'}
             </div>
           </div>
@@ -238,39 +240,95 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
 
   const renderPreferencesTab = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-800">Preferences</h3>
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Preferences</h3>
       
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-800">Notifications</h4>
-            <p className="text-sm text-gray-600">Receive notifications for new messages</p>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Notifications</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Receive notifications for new messages</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bg-gray-700 peer-checked:bg-blue-600"></div>
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h4 className="font-medium text-gray-800">Dark Mode</h4>
-            <p className="text-sm text-gray-600">Use dark theme for the interface</p>
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="mb-4">
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Theme</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Choose your preferred theme appearance
+              {isSystem && (
+                <span className="ml-2 text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                  Currently: {actualTheme === 'dark' ? 'Dark' : 'Light'} (System)
+                </span>
+              )}
+            </p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-          </label>
+          
+          <div className="space-y-3">
+            {/* Light Theme Option */}
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="theme"
+                value="light"
+                checked={theme === 'light'}
+                onChange={(e) => {
+                  console.log('Settings: Theme change to', e.target.value);
+                  setTheme(e.target.value);
+                }}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Light</span>
+              </div>
+            </label>
+            
+            {/* Dark Theme Option */}
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="theme"
+                value="dark"
+                checked={theme === 'dark'}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-gray-800 border-2 border-gray-600 rounded"></div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Dark</span>
+              </div>
+            </label>
+            
+            {/* System Theme Option */}
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="theme"
+                value="system"
+                checked={theme === 'system'}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-white to-gray-800 border-2 border-gray-400 rounded"></div>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">System</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <div>
-            <h4 className="font-medium text-gray-800">Sound</h4>
-            <p className="text-sm text-gray-600">Play sounds for new messages</p>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Sound</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Play sounds for new messages</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bg-gray-700 peer-checked:bg-blue-600"></div>
           </label>
         </div>
       </div>
@@ -278,28 +336,28 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="flex items-center p-4 border-b border-gray-200">
+      <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={onBackClick}
-          className="mr-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="mr-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="text-xl font-semibold text-gray-800">Settings</h2>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('profile')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'profile'
-              ? 'border-blue-500 text-blue-600 bg-blue-50'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
         >
           <User className="inline mr-2" size={16} />
@@ -309,8 +367,8 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
           onClick={() => setActiveTab('preferences')}
           className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'preferences'
-              ? 'border-blue-500 text-blue-600 bg-blue-50'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
         >
           <svg className="inline mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,7 +386,7 @@ const Settings = ({ currentUser, onLogout, onBackClick }) => {
       </div>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={onLogout}
           className="w-full flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
